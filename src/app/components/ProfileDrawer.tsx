@@ -308,7 +308,7 @@ export function ProfileDrawer({ isOpen, onClose, disabilityProfile, onProfileCha
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid #e8ecf0" }}>
           <div>
             <h2 className="font-bold" style={{ color: "#1a1a2e", fontSize: 18 }}>Meu Perfil</h2>
-            <p className="text-xs mt-0.5" style={{ color: "#6b6b8a" }}>Selecione suas necessidades</p>
+            <p className="text-xs mt-0.5" style={{ color: "#4a4a6a" }}>Selecione suas necessidades</p>
           </div>
           <button
             onClick={onClose}
@@ -318,7 +318,7 @@ export function ProfileDrawer({ isOpen, onClose, disabilityProfile, onProfileCha
             onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
             onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
           >
-            <X size={20} color="#6b6b8a" aria-hidden="true" />
+            <X size={20} color="#4a4a6a" aria-hidden="true" />
           </button>
         </div>
 
@@ -326,7 +326,7 @@ export function ProfileDrawer({ isOpen, onClose, disabilityProfile, onProfileCha
         <div className="flex-1 overflow-y-auto px-5 py-5">
 
           {/* Section label */}
-          <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "#6b6b8a" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "#4a4a6a" }}>
             Minhas necessidades
           </p>
 
@@ -358,7 +358,7 @@ export function ProfileDrawer({ isOpen, onClose, disabilityProfile, onProfileCha
           <div className="mb-4" style={{ borderTop: "1px solid #e8ecf0" }} />
 
           {/* Saved preferences */}
-          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#6b6b8a" }}>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#4a4a6a" }}>
             Minhas preferências salvas
           </p>
           <div className="flex flex-col gap-3">

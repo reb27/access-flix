@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { NavBar } from "./components/NavBar";
-import { HighContrastNavBar } from "./components/HighContrastNavBar";
 import { MobileHeader, MobileBottomNav } from "./components/MobileNav";
-import { MobileFeed } from "./components/MobileFeed";
 import { MobileSearchPage } from "./components/MobileSearchPage";
 import { MobileCategoriesPage } from "./components/MobileCategoriesPage";
 import { HomePage } from "./components/HomePage";
-import { HighContrastHomePage } from "./components/HighContrastHomePage";
+import { CategoryPage, type CategoryId } from "./components/CategoryPage";
 import { ListingPage } from "./components/ListingPage";
 import { DetailPage } from "./components/DetailPage";
 import { WatchPage } from "./components/WatchPage";
@@ -21,7 +19,8 @@ import { StreamingModal } from "./components/StreamingModal";
 type Page =
   | "home" | "listing" | "detail" | "watch"
   | "profile" | "search" | "highcontrast" | "createprofile"
-  | "mobilecategories" | "mobilesearch";
+  | "mobilecategories" | "mobilesearch"
+  | "category-visual" | "category-auditiva" | "category-cognitiva" | "category-motora";
 
 export type DisabilityProfile = {
   visual: boolean;
@@ -52,6 +51,7 @@ export default function App() {
   const [librasActive, setLibrasActive] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>("medium");
   const [fontSpacing, setFontSpacing] = useState<FontSpacing>("normal");
+  const [highContrast, setHighContrast] = useState(false);
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [streamingOpen, setStreamingOpen] = useState(false);
@@ -77,9 +77,21 @@ export default function App() {
     }
   }, []);
 
-  const isHighContrast = page === "highcontrast";
-  const fontSizeMap: Record<FontSize, string> = { small: "14px", medium: "16px", large: "20px" };
+  const isHighContrast = highContrast;
   const letterSpacingMap: Record<FontSpacing, string> = { normal: "normal", wide: "0.05em" };
+
+  /* Apply font-size + high-contrast classes on the html element so they cascade everywhere */
+  useEffect(() => {
+    const html = document.documentElement;
+    html.classList.remove("af-font-small", "af-font-medium", "af-font-large");
+    html.classList.add(`af-font-${fontSize}`);
+    if (highContrast) html.classList.add("af-high-contrast");
+    else              html.classList.remove("af-high-contrast");
+    html.style.letterSpacing = letterSpacingMap[fontSpacing];
+    return () => {
+      html.style.letterSpacing = "";
+    };
+  }, [fontSize, fontSpacing, highContrast]);
 
   const handleDeactivateSearch = () => {
     setSearchActive(false);
@@ -111,7 +123,7 @@ export default function App() {
   /* ── CreateProfile is a full-page takeover ── */
   if (page === "createprofile") {
     return (
-      <div style={{ fontSize: fontSizeMap[fontSize], letterSpacing: letterSpacingMap[fontSpacing] }}>
+      <div className="af-app-root" style={{ letterSpacing: letterSpacingMap[fontSpacing] }}>
         <CreateProfilePage
           onBack={() => setPage("home")}
           onComplete={(needs) => handleCompleteProfile(needs)}
@@ -121,11 +133,11 @@ export default function App() {
   }
 
   /* ── Mobile layout (≤480px) ── */
-  if (isMobile && !isHighContrast) {
+  if (isMobile) {
     /* Full-screen pages that don't show the nav/bottom bar */
     if (page === "mobilesearch") {
       return (
-        <div style={{ fontSize: fontSizeMap[fontSize] }}>
+        <div className="af-app-root">
           <MobileSearchPage onBack={() => setPage("home")} />
         </div>
       );
@@ -133,20 +145,22 @@ export default function App() {
 
     return (
       <div
-        className="flex flex-col"
-        style={{ height: "100svh", overflow: "hidden", backgroundColor: page === "home" ? "#0a0a0a" : "#f5f7fa", fontSize: fontSizeMap[fontSize], letterSpacing: letterSpacingMap[fontSpacing] }}
+        className="flex flex-col af-app-root"
+        style={{ height: "100svh", overflow: "hidden", backgroundColor: "var(--af-bg, #F5F7FA)", letterSpacing: letterSpacingMap[fontSpacing] }}
       >
-        {/* Header only shown on non-home pages (feed has its own built-in header) */}
-        {page !== "home" && page !== "mobilecategories" && (
+        {/* Header shown on all pages except categories (which has its own header) */}
+        {page !== "mobilecategories" && (
           <MobileHeader onNavigate={setPage} />
         )}
 
-        {/* Content area */}
-        <div className="flex-1 overflow-hidden">
+        {/* Content area — min-h-0 is required so flex-1 actually respects the parent's height and doesn't push the bottom nav off-screen */}
+        <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
           {page === "home" && (
-            <MobileFeed
-              onItemClick={() => setPage("detail")}
-              onSearchClick={() => setPage("mobilesearch")}
+            <HomePage
+              onNavigate={setPage as any}
+              disabilityProfile={disabilityProfile}
+              hasProfile={hasProfile}
+              onShowStreaming={() => setStreamingOpen(true)}
             />
           )}
 
@@ -157,40 +171,41 @@ export default function App() {
             />
           )}
 
+          {page.startsWith("category-") && (
+            <CategoryPage
+              categoryId={page.replace("category-", "") as CategoryId}
+              onBack={() => setPage("home")}
+              onItemClick={() => setPage("detail")}
+              onStreamingClick={() => setStreamingOpen(true)}
+              onNavigateCategory={(c) => setPage(`category-${c}` as Page)}
+            />
+          )}
+
           {page === "listing" && (
-            <div className="h-full overflow-y-auto" style={{ backgroundColor: "#F5F7FA" }}>
-              <ListingPage onNavigate={setPage as any} />
-            </div>
+            <ListingPage onNavigate={setPage as any} />
           )}
           {page === "detail" && (
-            <div className="h-full overflow-y-auto">
-              <DetailPage
-                onBack={() => setPage("home")}
-                onWatch={() => setPage("watch")}
-                hasProfile={hasProfile}
-                onShowOnboarding={() => setOnboardingOpen(true)}
-              />
-            </div>
+            <DetailPage
+              onBack={() => setPage("home")}
+              onWatch={() => setPage("watch")}
+              hasProfile={hasProfile}
+              onShowOnboarding={() => setOnboardingOpen(true)}
+            />
           )}
           {page === "watch" && (
-            <div className="h-full overflow-y-auto">
-              <WatchPage onBack={() => setPage("detail")} />
-            </div>
+            <WatchPage onBack={() => setPage("detail")} />
           )}
           {page === "profile" && (
-            <div className="h-full overflow-y-auto">
-              <ProfilePage
-                onBack={() => setPage("home")}
-                onGoToCreateProfile={() => setPage("createprofile")}
-                isLoggedIn={hasProfile}
-                selectedNeeds={selectedNeeds}
-              />
-            </div>
+            <ProfilePage
+              onBack={() => setPage("home")}
+              onGoToCreateProfile={() => setPage("createprofile")}
+              isLoggedIn={hasProfile}
+              selectedNeeds={selectedNeeds}
+            />
           )}
         </div>
 
-        {/* Bottom nav — dark when on the immersive feed */}
-        <MobileBottomNav onNavigate={setPage} currentPage={page} dark={page === "home"} />
+        <MobileBottomNav onNavigate={setPage} currentPage={page} dark={false} />
 
         {/* Overlays */}
         {profileDrawerOpen && (
@@ -217,33 +232,31 @@ export default function App() {
   /* ── Desktop / tablet layout ── */
   return (
     <div
-      className="flex flex-col"
-      style={{ minHeight: "100vh", backgroundColor: isHighContrast ? "#000000" : "#F5F7FA", fontSize: fontSizeMap[fontSize], letterSpacing: letterSpacingMap[fontSpacing] }}
+      className="flex flex-col af-app-root"
+      style={{ minHeight: "100vh", letterSpacing: letterSpacingMap[fontSpacing] }}
     >
-      {isHighContrast ? (
-        <HighContrastNavBar onNavigate={setPage as any} />
-      ) : (
-        <NavBar
-          onNavigate={setPage as any}
-          currentPage={page}
-          librasActive={librasActive}
-          onLibrasToggle={() => setLibrasActive(!librasActive)}
-          fontSize={fontSize}
-          fontSpacing={fontSpacing}
-          onFontSizeChange={setFontSize}
-          onFontSpacingChange={setFontSpacing}
-          onProfileClick={handleProfileClick}
-          searchQuery={searchQuery}
-          searchActive={searchActive}
-          onSearchChange={setSearchQuery}
-          onSearchActivate={() => setSearchActive(true)}
-          onSearchDeactivate={handleDeactivateSearch}
-          activeSearchChip={activeSearchChip}
-          onSearchChipChange={setActiveSearchChip}
-        />
-      )}
+      <NavBar
+        onNavigate={setPage as any}
+        currentPage={page}
+        librasActive={librasActive}
+        onLibrasToggle={() => setLibrasActive(!librasActive)}
+        highContrast={highContrast}
+        onContrastToggle={() => setHighContrast((v) => !v)}
+        fontSize={fontSize}
+        fontSpacing={fontSpacing}
+        onFontSizeChange={setFontSize}
+        onFontSpacingChange={setFontSpacing}
+        onProfileClick={handleProfileClick}
+        searchQuery={searchQuery}
+        searchActive={searchActive}
+        onSearchChange={setSearchQuery}
+        onSearchActivate={() => setSearchActive(true)}
+        onSearchDeactivate={handleDeactivateSearch}
+        activeSearchChip={activeSearchChip}
+        onSearchChipChange={setActiveSearchChip}
+      />
 
-      {searchActive && !isHighContrast ? (
+      {searchActive ? (
         <SearchPage
           query={searchQuery}
           activeChip={activeSearchChip}
@@ -251,8 +264,16 @@ export default function App() {
         />
       ) : (
         <>
-          {page === "home" && <HomePage onNavigate={setPage as any} disabilityProfile={disabilityProfile} onShowStreaming={() => setStreamingOpen(true)} />}
-          {page === "highcontrast" && <HighContrastHomePage onNavigate={setPage as any} />}
+          {page === "home" && <HomePage onNavigate={setPage as any} disabilityProfile={disabilityProfile} hasProfile={hasProfile} onShowStreaming={() => setStreamingOpen(true)} />}
+          {page.startsWith("category-") && (
+            <CategoryPage
+              categoryId={page.replace("category-", "") as CategoryId}
+              onBack={() => setPage("home")}
+              onItemClick={() => setPage("detail")}
+              onStreamingClick={() => setStreamingOpen(true)}
+              onNavigateCategory={(c) => setPage(`category-${c}` as Page)}
+            />
+          )}
           {page === "listing" && <ListingPage onNavigate={setPage as any} />}
           {page === "detail" && <DetailPage onBack={() => setPage("listing")} onWatch={() => setPage("watch")} hasProfile={hasProfile} onShowOnboarding={() => setOnboardingOpen(true)} />}
           {page === "watch" && <WatchPage onBack={() => setPage("detail")} />}

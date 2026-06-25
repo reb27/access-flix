@@ -10,6 +10,8 @@ interface NavBarProps {
   currentPage?: Page;
   librasActive: boolean;
   onLibrasToggle: () => void;
+  highContrast: boolean;
+  onContrastToggle: () => void;
   fontSize: FontSize;
   fontSpacing: FontSpacing;
   onFontSizeChange: (size: FontSize) => void;
@@ -117,6 +119,8 @@ export function NavBar({
   currentPage,
   librasActive,
   onLibrasToggle,
+  highContrast,
+  onContrastToggle,
   fontSize,
   fontSpacing,
   onFontSizeChange,
@@ -130,7 +134,7 @@ export function NavBar({
   activeSearchChip,
   onSearchChipChange,
 }: NavBarProps) {
-  const isHighContrast = currentPage === "highcontrast";
+  const isHighContrast = highContrast;
   const [fontPopoverOpen, setFontPopoverOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const fontButtonRef = useRef<HTMLButtonElement>(null);
@@ -181,7 +185,7 @@ export function NavBar({
         label="Contraste"
         icon={<Sun size={18} />}
         active={isHighContrast}
-        onClick={() => onNavigate(isHighContrast ? "home" : "highcontrast")}
+        onClick={onContrastToggle}
         ariaLabel={isHighContrast ? "Desativar alto contraste" : "Ativar alto contraste"}
         ariaPressed={isHighContrast}
       />

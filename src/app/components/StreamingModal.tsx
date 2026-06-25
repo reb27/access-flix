@@ -157,7 +157,7 @@ export function StreamingModal({ title = "O Grande Filme Acessível", onClose, h
             <h2 id="streaming-title" className="font-bold" style={{ color: "#1a1a2e", fontSize: 18 }}>
               Disponível em
             </h2>
-            <p className="text-sm" style={{ color: "#6b6b8a" }}>{title}</p>
+            <p className="text-sm" style={{ color: "#4a4a6a" }}>{title}</p>
           </div>
           <button
             ref={closeButtonRef}
@@ -168,7 +168,7 @@ export function StreamingModal({ title = "O Grande Filme Acessível", onClose, h
             onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
             onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
           >
-            <X size={20} color="#6b6b8a" aria-hidden="true" />
+            <X size={20} color="#4a4a6a" aria-hidden="true" />
           </button>
         </div>
 
@@ -248,7 +248,7 @@ function PlatformCard({ platform: p }: { platform: Platform }) {
         </div>
         <div>
           <div className="font-bold text-sm" style={{ color: "#1a1a2e" }}>{p.name}</div>
-          <div className="text-xs" style={{ color: "#6b6b8a" }}>{p.price}</div>
+          <div className="text-xs" style={{ color: "#4a4a6a" }}>{p.price}</div>
         </div>
       </div>
 

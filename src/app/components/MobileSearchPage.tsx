@@ -223,7 +223,7 @@ export function MobileSearchPage({ onBack }: MobileSearchPageProps) {
         {/* Suggestions — when no query */}
         {!query && (
           <section aria-label="Sugestões">
-            <h2 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#6b6b8a" }}>Sugestões</h2>
+            <h2 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#4a4a6a" }}>Sugestões</h2>
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border: "1px solid #e8ecf0" }}>
               {suggestions.map((s, i) => (
                 <button
@@ -258,7 +258,7 @@ export function MobileSearchPage({ onBack }: MobileSearchPageProps) {
                 <span style={{ color: "#0073e6" }}>"{query}"</span>
               </h2>
               {!loading && (
-                <span className="text-xs" style={{ color: "#6b6b8a" }}>{filteredResults.length} resultado{filteredResults.length !== 1 ? "s" : ""}</span>
+                <span className="text-xs" style={{ color: "#4a4a6a" }}>{filteredResults.length} resultado{filteredResults.length !== 1 ? "s" : ""}</span>
               )}
             </div>
 
@@ -270,7 +270,7 @@ export function MobileSearchPage({ onBack }: MobileSearchPageProps) {
               <div className="text-center py-12 bg-white rounded-2xl" role="status">
                 <div className="text-4xl mb-3" aria-hidden="true">🔍</div>
                 <p className="font-semibold mb-1 text-sm" style={{ color: "#1a1a2e" }}>Nenhum resultado</p>
-                <p className="text-xs mb-3" style={{ color: "#6b6b8a" }}>Tente remover filtros.</p>
+                <p className="text-xs mb-3" style={{ color: "#4a4a6a" }}>Tente remover filtros.</p>
                 <button onClick={() => setActiveChip(null)}
                   className="px-3 py-1.5 rounded-xl text-white text-xs font-semibold focus:outline-none"
                   style={{ backgroundColor: "#0073e6" }}

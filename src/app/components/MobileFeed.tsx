@@ -1,15 +1,13 @@
 import { useState, useRef } from "react";
-import { Search, Bookmark, Play, Share2 } from "lucide-react";
-import { ALL_CONTENT, type ContentItem } from "./ContentCard";
+import { Search, Bookmark, Share2, Info } from "lucide-react";
+import { ALL_CONTENT, type ContentItem, platformConfig } from "./ContentCard";
 
-/* ── Category chips ── */
+/* ── Category chips — match the 4 categories used across the app ── */
 const CHIPS = [
-  { id: "visual",    label: "Visual",    color: "#e6308a" },
+  { id: "visual",    label: "Visual",    color: "#c01a6f" },
   { id: "auditiva",  label: "Auditiva",  color: "#0073e6" },
-  { id: "cognitiva", label: "Cognitiva", color: "#5ba300" },
-  { id: "motora",    label: "Motora",    color: "#f5a623" },
-  { id: "tdah",      label: "TDAH",      color: "#7c3aed" },
-  { id: "tea",       label: "TEA",       color: "#0891b2" },
+  { id: "cognitiva", label: "Cognitiva", color: "#3d7500" },
+  { id: "motora",    label: "Motora",    color: "#a35e00" },
 ];
 
 /* ── Access badge pill colors ── */
@@ -38,8 +36,8 @@ function FeedCard({
      * scroll-snap-align: start snaps each card to the top.
      */
     <article
+      className="af-focus"
       style={{
-        /* Fill the scrollport — height set by parent item wrapper */
         width: "100%",
         height: "100%",
         position: "relative",
@@ -49,16 +47,10 @@ function FeedCard({
         cursor: "pointer",
         flexShrink: 0,
       }}
-      aria-label={`${item.title} — ${item.type}`}
+      aria-label={`${item.title} — ${item.type}, avaliação ${item.rating.toFixed(1)} de 5`}
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onDetailClick()}
-      onFocus={(e) => {
-        e.currentTarget.style.outline = "3px solid #0073e6";
-        e.currentTarget.style.outlineOffset = "4px";
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.outline = "none";
-      }}
+      role="button"
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onDetailClick())}
     >
       {/* Poster image */}
       {!posterErr && (
@@ -190,6 +182,40 @@ function FeedCard({
           </div>
         )}
 
+        {/* Platform chips */}
+        {item.platforms.length > 0 && (
+          <div
+            aria-label={`Disponível em: ${item.platforms.map((p) => platformConfig[p].name).join(", ")}`}
+            style={{ display: "flex", gap: 6, marginTop: 2 }}
+          >
+            {item.platforms.slice(0, 4).map((p) => {
+              const cfg = platformConfig[p];
+              return (
+                <span
+                  key={p}
+                  aria-hidden="true"
+                  title={cfg.name}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 6,
+                    backgroundColor: cfg.color,
+                    color: "white",
+                    fontSize: 10,
+                    fontWeight: 800,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid rgba(255,255,255,0.25)",
+                  }}
+                >
+                  {cfg.initials}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
         {/* Action row */}
         <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
           <ActionBtn
@@ -201,8 +227,8 @@ function FeedCard({
             }}
           />
           <ActionBtn
-            icon={<Play size={20} fill="white" />}
-            label="Ver agora"
+            icon={<Info size={20} />}
+            label="Ver detalhes"
             primary
             onClick={(e) => {
               e.stopPropagation();
@@ -235,6 +261,7 @@ function ActionBtn({
     <button
       aria-label={label}
       onClick={onClick}
+      className="af-focus-light"
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -244,20 +271,12 @@ function ActionBtn({
         minWidth: 44,
         borderRadius: 22,
         backgroundColor: primary ? "#0073e6" : "rgba(255,255,255,0.18)",
-        border: primary ? "none" : "1px solid rgba(255,255,255,0.35)",
+        border: primary ? "none" : "1px solid rgba(255,255,255,0.45)",
         color: "white",
         fontSize: 12,
         fontWeight: 600,
         backdropFilter: "blur(6px)",
         cursor: "pointer",
-        outline: "none",
-      }}
-      onFocus={(e) => {
-        e.currentTarget.style.outline = "3px solid rgba(255,255,255,0.7)";
-        e.currentTarget.style.outlineOffset = "2px";
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.outline = "none";
       }}
     >
       {icon}
@@ -276,14 +295,14 @@ export function MobileFeed({ onItemClick, onSearchClick }: MobileFeedProps) {
   const [activeChip, setActiveChip] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const items = ALL_CONTENT.slice(0, 6).filter((item) => {
+  const items = ALL_CONTENT.filter((item) => {
     if (!activeChip) return true;
     if (activeChip === "visual")    return item.badges.includes("AD");
     if (activeChip === "auditiva")  return item.badges.includes("Leg") || item.badges.includes("Libras");
-    if (activeChip === "cognitiva") return item.badges.includes("AD");
+    if (activeChip === "cognitiva") return item.badges.includes("Adapt");
     if (activeChip === "motora")    return item.badges.includes("Adapt");
     return true;
-  });
+  }).slice(0, 8);
 
   return (
     /*
@@ -341,6 +360,7 @@ export function MobileFeed({ onItemClick, onSearchClick }: MobileFeedProps) {
         <button
           onClick={onSearchClick}
           aria-label="Buscar"
+          className="af-focus-light"
           style={{
             width: 44,
             height: 44,
@@ -352,10 +372,7 @@ export function MobileFeed({ onItemClick, onSearchClick }: MobileFeedProps) {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            outline: "none",
           }}
-          onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-          onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
         >
           <Search size={24} aria-hidden="true" />
         </button>
@@ -389,23 +406,21 @@ export function MobileFeed({ onItemClick, onSearchClick }: MobileFeedProps) {
               key={chip.id}
               onClick={() => setActiveChip(active ? null : chip.id)}
               aria-pressed={active}
+              className="af-focus-light"
               style={{
-                height: 28,
-                padding: "0 12px",
-                borderRadius: 14,
+                height: 32,
+                padding: "0 14px",
+                borderRadius: 16,
                 backgroundColor: active ? "white" : "transparent",
-                border: `1px solid ${active ? "white" : "rgba(255,255,255,0.5)"}`,
+                border: `1.5px solid ${active ? "white" : "rgba(255,255,255,0.55)"}`,
                 color: active ? "#0a0a0a" : "white",
                 fontSize: 13,
-                fontWeight: active ? 700 : 500,
+                fontWeight: active ? 700 : 600,
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 flexShrink: 0,
-                outline: "none",
                 transition: "all 0.15s ease",
               }}
-              onFocus={(e) => { e.currentTarget.style.outline = `3px solid ${chip.color}`; e.currentTarget.style.outlineOffset = "2px"; }}
-              onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
             >
               {chip.label}
             </button>
@@ -445,19 +460,18 @@ export function MobileFeed({ onItemClick, onSearchClick }: MobileFeedProps) {
             <p style={{ fontSize: 15, fontWeight: 600 }}>Nenhum conteúdo com esse filtro</p>
             <button
               onClick={() => setActiveChip(null)}
+              className="af-focus-light"
               style={{
-                padding: "8px 20px",
-                borderRadius: 20,
+                padding: "10px 22px",
+                minHeight: 44,
+                borderRadius: 22,
                 backgroundColor: "#0073e6",
                 color: "white",
                 fontSize: 14,
                 fontWeight: 600,
                 border: "none",
                 cursor: "pointer",
-                outline: "none",
               }}
-              onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-              onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
             >
               Ver todos
             </button>

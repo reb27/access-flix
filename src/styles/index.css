@@ -1,3 +1,158 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+/* ============================================================
+   FONT — Atkinson Hyperlegible (Braille Institute, designed for low vision).
+   Loaded from Google Fonts in index.html.
+   ============================================================ */
+html, body, button, input, textarea, select {
+  font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ============================================================
+   GLOBAL ACCESSIBILITY: font scale + high-contrast mode
+   ============================================================ */
+
+/* Font scale — applied to <html> from App.tsx. */
+html.af-font-small  { zoom: 0.90; font-size: 14px; }
+html.af-font-medium { zoom: 1.00; font-size: 16px; }
+html.af-font-large  { zoom: 1.18; font-size: 18px; }
+html.af-font-large  body { font-size: 1.05rem; }
+
+/* ============================================================
+   HIGH CONTRAST — uses CSS filter so it inverts colors without
+   breaking layouts. Images get a second invert to come back to normal.
+   This is the technique used by Windows High Contrast mode emulators.
+   ============================================================ */
+
+html.af-high-contrast body {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #ffffff; /* will be inverted to black */
+}
+
+/* Re-invert images, videos and elements that opted out */
+html.af-high-contrast img,
+html.af-high-contrast video,
+html.af-high-contrast .af-hc-keep-color {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Stronger focus ring in HC mode (the invert flips blue to yellow already, but make it thicker) */
+html.af-high-contrast :focus-visible {
+  outline-width: 4px !important;
+  outline-offset: 3px !important;
+}
+
+/* ---------- Accessibility utilities ---------- */
+
+.af-focus:focus-visible {
+  outline: 3px solid #0073e6;
+  outline-offset: 2px;
+}
+
+/* For use on dark backgrounds (mobile feed, hero overlays) */
+.af-focus-light:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.af-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  color: #1a1a2e;
+  border: 1px solid #d0d5e0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: background-color 150ms, transform 150ms;
+}
+.af-icon-btn:hover {
+  background-color: #f5f7fa;
+}
+.af-icon-btn:active {
+  transform: scale(0.95);
+}
+.af-icon-btn:focus-visible {
+  outline: 3px solid #0073e6;
+  outline-offset: 2px;
+}
+
+/* ---------- Category cards (lively but accessible) ---------- */
+
+.af-category-card {
+  transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
+}
+.af-category-card:hover {
+  transform: translateY(-3px) rotate(-0.5deg);
+}
+.af-category-card:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+/* ---------- Hero ---------- */
+
+@keyframes af-twinkle {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50%      { opacity: 1;   transform: scale(1.15); }
+}
+
+.af-hero-twinkle {
+  animation: af-twinkle 2.6s ease-in-out infinite;
+  display: inline-block;
+  transform-origin: center;
+}
+.af-hero-twinkle-2 { animation-delay: 0.7s; }
+.af-hero-twinkle-3 { animation-delay: 1.3s; }
+
+/* Floating poster cluster animation */
+@keyframes af-float {
+  0%, 100% { transform: var(--af-rot, rotate(0)) translateY(0); }
+  50%      { transform: var(--af-rot, rotate(0)) translateY(-6px); }
+}
+
+.af-hero-poster {
+  animation: af-float 4.5s ease-in-out infinite;
+  transition: transform 200ms ease;
+}
+.af-hero-poster:nth-child(1) { --af-rot: rotate(-8deg); animation-delay: 0s; }
+.af-hero-poster:nth-child(2) { --af-rot: rotate(0deg);  animation-delay: 0.5s; }
+.af-hero-poster:nth-child(3) { --af-rot: rotate(8deg);  animation-delay: 1s; }
+
+/* Bokeh circles inside hero */
+.af-hero-bokeh {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,226,122,0.35) 0%, transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+.af-hero-bokeh-2 {
+  top: auto;
+  right: auto;
+  bottom: -60px;
+  left: -60px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(229,48,138,0.4) 0%, transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .af-hero-twinkle,
+  .af-hero-twinkle-2,
+  .af-hero-twinkle-3,
+  .af-hero-poster {
+    animation: none;
+  }
+  .af-hero-poster:nth-child(1) { transform: rotate(-8deg); }
+  .af-hero-poster:nth-child(2) { transform: rotate(0deg);  }
+  .af-hero-poster:nth-child(3) { transform: rotate(8deg);  }
+  .af-category-card:hover { transform: none; }
+}

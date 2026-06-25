@@ -105,7 +105,7 @@ function SavedCard({ item }: { item: typeof SAVED_ITEMS[0] }) {
       <p className="text-xs font-semibold mt-1.5 leading-tight line-clamp-2" style={{ color: "#1a1a2e" }}>{item.title}</p>
       <div className="flex items-center gap-1 mt-0.5">
         <Star size={10} fill="#f5a623" color="#f5a623" aria-hidden="true" />
-        <span className="text-xs font-bold" style={{ color: "#6b6b8a" }}>{item.rating}</span>
+        <span className="text-xs font-bold" style={{ color: "#4a4a6a" }}>{item.rating}</span>
       </div>
       <div className="flex flex-wrap gap-0.5 mt-1">
         {item.badges.slice(0, 2).map((b) => (
@@ -272,7 +272,7 @@ export function ProfilePage({
               ) : (
                 <div className="flex flex-col items-center py-4 gap-3">
                   <span className="text-3xl" aria-hidden="true">🧩</span>
-                  <p className="text-sm text-center" style={{ color: "#6b6b8a" }}>
+                  <p className="text-sm text-center" style={{ color: "#4a4a6a" }}>
                     Você ainda não definiu suas necessidades.
                   </p>
                   <button
@@ -301,7 +301,7 @@ export function ProfilePage({
               ) : (
                 <div className="bg-white rounded-2xl p-6 flex flex-col items-center gap-2 text-center" style={{ border: "1px solid #e8ecf0" }}>
                   <span className="text-3xl" aria-hidden="true">🎬</span>
-                  <p className="text-sm" style={{ color: "#6b6b8a" }}>
+                  <p className="text-sm" style={{ color: "#4a4a6a" }}>
                     Você ainda não salvou nada. Explore o catálogo.
                   </p>
                 </div>
@@ -325,7 +325,7 @@ export function ProfilePage({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: "#1a1a2e" }}>{item.title}</p>
-                      <p className="text-xs" style={{ color: "#6b6b8a" }}>Assistido em {item.platform}</p>
+                      <p className="text-xs" style={{ color: "#4a4a6a" }}>Assistido em {item.platform}</p>
                     </div>
                   </div>
                 ))}

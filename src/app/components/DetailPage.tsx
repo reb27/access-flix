@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import {
   Eye, Ear, Brain, Star, ChevronLeft,
   Volume2, Captions, Hand, Monitor, Keyboard, Mic, Zap, BookOpen,
-  Bookmark, ThumbsUp, Share2, Send, CheckSquare, Square,
+  Bookmark, ThumbsUp, Share2, Send, CheckSquare, Square, Calendar, Clock, Film, Play,
 } from "lucide-react";
 import { StreamingModal } from "./StreamingModal";
+import { ContentCard, ALL_CONTENT, platformConfig, type PlatformId } from "./ContentCard";
 
 /* ── Animated score bar ── */
 function ScoreBar({ icon, label, score, barColor, delay }: {
@@ -60,18 +61,17 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
       {[1,2,3,4,5].map((n) => (
         <button
           key={n}
+          type="button"
           onClick={() => onChange(n)}
           onMouseEnter={() => setHover(n)}
           onMouseLeave={() => setHover(0)}
           aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
-          className="focus:outline-none"
-          onFocus={(e) => { e.currentTarget.style.outline = "2px solid #0073e6"; }}
-          onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
+          className="af-focus rounded p-1"
         >
           <Star
-            size={24}
-            fill={(hover || value) >= n ? "#f5a623" : "none"}
-            color={(hover || value) >= n ? "#f5a623" : "#d0d5e0"}
+            size={26}
+            fill={(hover || value) >= n ? "#b35d00" : "none"}
+            color={(hover || value) >= n ? "#b35d00" : "#4a4a6a"}
           />
         </button>
       ))}
@@ -141,12 +141,12 @@ function ReviewCard({ review }: { review: ReviewItem }) {
             </span>
           </div>
         </div>
-        <span className="text-xs flex-shrink-0" style={{ color: "#6b6b8a" }}>{review.date}</span>
+        <span className="text-xs flex-shrink-0" style={{ color: "#4a4a6a" }}>{review.date}</span>
       </div>
 
       <div className="flex gap-0.5" aria-label={`Nota: ${review.rating} de 5`}>
         {[1,2,3,4,5].map((n) => (
-          <Star key={n} size={14} fill={n <= review.rating ? "#f5a623" : "none"} color={n <= review.rating ? "#f5a623" : "#d0d5e0"} aria-hidden="true" />
+          <Star key={n} size={14} fill={n <= review.rating ? "#b35d00" : "none"} color={n <= review.rating ? "#b35d00" : "#d0d5e0"} aria-hidden="true" />
         ))}
       </div>
 
@@ -156,7 +156,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
         <button
           onClick={() => { if (!voted) { setHelpful(h => h + 1); setVoted(true); } }}
           className="flex items-center gap-1.5 text-xs transition-colors focus:outline-none focus:ring-2 rounded px-1"
-          style={{ color: voted ? "#0073e6" : "#6b6b8a", ["--tw-ring-color" as string]: "#0073e6" }}
+          style={{ color: voted ? "#0073e6" : "#4a4a6a", ["--tw-ring-color" as string]: "#0073e6" }}
           aria-label={`Marcar como útil. ${helpful} pessoas acharam útil.`}
           aria-pressed={voted}
         >
@@ -165,7 +165,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
         </button>
         <button
           className="flex items-center gap-1.5 text-xs transition-colors focus:outline-none focus:ring-2 rounded px-1"
-          style={{ color: "#6b6b8a", ["--tw-ring-color" as string]: "#0073e6" }}
+          style={{ color: "#4a4a6a", ["--tw-ring-color" as string]: "#0073e6" }}
           aria-label="Compartilhar avaliação"
         >
           <Share2 size={14} aria-hidden="true" />
@@ -236,22 +236,22 @@ function ReviewForm({ onRequireLogin }: { onRequireLogin: () => void }) {
             { id: "visual", label: "Visual", color: "#e6308a" },
             { id: "auditiva", label: "Auditiva", color: "#0073e6" },
             { id: "cognitiva", label: "Cognitiva", color: "#5ba300" },
-            { id: "motora", label: "Motora", color: "#f5a623" },
+            { id: "motora", label: "Motora", color: "#b35d00" },
           ].map((d) => {
             const checked = disabilities.includes(d.id);
             return (
               <button
                 key={d.id}
+                type="button"
                 onClick={() => toggleDisability(d.id)}
                 aria-pressed={checked}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all focus:outline-none"
+                className="af-focus flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all"
                 style={{
                   backgroundColor: checked ? d.color : "transparent",
                   borderColor: checked ? d.color : "#d0d5e0",
                   color: checked ? "white" : "#4a4a6a",
+                  minHeight: 36,
                 }}
-                onFocus={(e) => { e.currentTarget.style.outline = `3px solid ${d.color}`; e.currentTarget.style.outlineOffset = "2px"; }}
-                onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
               >
                 {checked ? <CheckSquare size={12} aria-hidden="true" /> : <Square size={12} aria-hidden="true" />}
                 {d.label}
@@ -262,17 +262,17 @@ function ReviewForm({ onRequireLogin }: { onRequireLogin: () => void }) {
       </div>
 
       <button
+        type="button"
         onClick={handleSubmit}
         disabled={rating === 0}
-        className="flex items-center justify-center gap-2 rounded-xl py-3 text-white font-semibold transition-all focus:outline-none"
+        className="af-focus flex items-center justify-center gap-2 rounded-xl py-3 text-white font-semibold transition-colors"
         style={{
-          backgroundColor: rating === 0 ? "#b0c4de" : "#0073e6",
+          backgroundColor: rating === 0 ? "#4a4a6a" : "#0073e6",
           cursor: rating === 0 ? "not-allowed" : "pointer",
+          minHeight: 48,
         }}
         onMouseEnter={(e) => { if (rating > 0) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#005bb5"; }}
         onMouseLeave={(e) => { if (rating > 0) (e.currentTarget as HTMLButtonElement).style.backgroundColor = "#0073e6"; }}
-        onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-        onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
         aria-disabled={rating === 0}
       >
         <Send size={16} aria-hidden="true" />
@@ -311,73 +311,97 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
   };
 
   return (
-    <div className="flex-1 overflow-y-auto" style={{ backgroundColor: "#F5F7FA" }}>
+    <div style={{ backgroundColor: "#F5F7FA" }}>
 
       {/* ══ HERO ══ */}
-      <section style={{ backgroundColor: "#1A1A2E" }}>
+      <section
+        style={{
+          background:
+            "radial-gradient(ellipse at top left, #2a1a4e 0%, #1A1A2E 60%, #0f0f1e 100%)",
+        }}
+      >
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 pb-10 md:pb-14">
 
           {/* Back */}
           <button
+            type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-1.5 mb-6 md:mb-8 text-sm rounded focus:outline-none transition-opacity"
-            style={{ color: "rgba(255,255,255,0.7)", minHeight: 44 }}
-            onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-            onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
+            className="af-focus-light inline-flex items-center gap-1.5 mb-6 md:mb-8 text-sm rounded transition-opacity hover:opacity-100"
+            style={{ color: "rgba(255,255,255,0.75)", minHeight: 44, padding: "0 4px" }}
             aria-label="Voltar para a listagem"
           >
-            <ChevronLeft size={16} aria-hidden="true" />
+            <ChevronLeft size={18} aria-hidden="true" />
             Voltar
           </button>
 
           <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
             {/* Poster */}
             <div
-              className="flex-shrink-0 rounded-2xl overflow-hidden flex items-center justify-center self-center md:self-start"
+              className="flex-shrink-0 rounded-2xl overflow-hidden flex items-center justify-center self-center md:self-start relative"
               style={{
-                width: "min(180px, 45vw)", aspectRatio: "2/3",
+                width: "min(200px, 45vw)", aspectRatio: "2/3",
                 background: "linear-gradient(145deg,#6366f1 0%,#8b5cf6 100%)",
+                boxShadow: "0 20px 60px rgba(99, 102, 241, 0.4)",
               }}
               aria-label="Poster do filme" role="img"
             >
-              <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <svg width="72" height="72" viewBox="0 0 64 64" fill="none" aria-hidden="true">
                 <path d="M10 52L26 30L36 44L46 26L58 52H10Z" fill="white" fillOpacity="0.22" />
                 <circle cx="24" cy="20" r="7" fill="white" fillOpacity="0.22" />
               </svg>
+              {/* 100% badge floating */}
+              <div
+                className="absolute top-2 right-2 flex items-center gap-1 rounded-full text-white"
+                style={{
+                  backgroundColor: "#2f5a00",
+                  padding: "4px 9px",
+                  fontSize: 11,
+                  fontWeight: 800,
+                  boxShadow: "0 2px 10px rgba(47,90,0,0.5)",
+                }}
+                aria-label="100% acessível"
+              >
+                ✨ 100%
+              </div>
             </div>
 
             {/* Meta */}
-            <div className="flex flex-col gap-4 flex-1 w-full">
-              {/* Hero badges */}
-              <div className="flex flex-wrap gap-2">
-                {["AD","Leg","Libras"].map((b) => {
-                  const colors: Record<string,string> = { AD: "#5ba300", Leg: "#0073e6", Libras: "#e6308a" };
-                  return (
-                    <span
-                      key={b}
-                      className="px-3 py-1 rounded-full text-white text-xs font-bold"
-                      style={{ backgroundColor: colors[b] }}
-                      aria-label={b === "AD" ? "Audiodescrição" : b === "Leg" ? "Legendas" : "Libras"}
-                    >
-                      {b}
-                    </span>
-                  );
-                })}
+            <div className="flex flex-col gap-4 flex-1 w-full min-w-0">
+              {/* Access feature badges */}
+              <div className="flex flex-wrap gap-2" aria-label="Recursos de acessibilidade">
+                {[
+                  { id: "AD",     label: "Audiodescrição", bg: "#1a4d1a" },
+                  { id: "Leg",    label: "Legendas",       bg: "#003366" },
+                  { id: "Libras", label: "Libras",         bg: "#6b0038" },
+                ].map((b) => (
+                  <span
+                    key={b.id}
+                    className="px-3 py-1.5 rounded-full text-white text-xs font-bold flex items-center gap-1.5"
+                    style={{ backgroundColor: b.bg, border: "1px solid rgba(255,255,255,0.15)" }}
+                  >
+                    <span aria-hidden="true">✓</span>
+                    {b.label}
+                  </span>
+                ))}
               </div>
 
-              <h1 className="text-white leading-tight" style={{ fontSize: "clamp(24px, 5vw, 36px)", fontWeight: 800 }}>
+              <h1 className="text-white leading-tight" style={{ fontSize: "clamp(26px, 5vw, 40px)", fontWeight: 800 }}>
                 O Grande Filme Acessível
               </h1>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <span
-                  className="text-xs font-bold px-2.5 py-1 rounded border"
-                  style={{ borderColor: "rgba(255,255,255,0.35)", color: "rgba(255,255,255,0.9)" }}
-                >
+              {/* Metadata chips */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold px-2.5 py-1 rounded-md" style={{ border: "1.5px solid rgba(255,255,255,0.4)", color: "white" }}>
                   14 anos
                 </span>
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
-                  2024 • 2h 15min • Drama
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.95)" }}>
+                  <Calendar size={12} aria-hidden="true" /> 2024
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.95)" }}>
+                  <Clock size={12} aria-hidden="true" /> 2h 15min
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.95)" }}>
+                  <Film size={12} aria-hidden="true" /> Drama
                 </span>
               </div>
 
@@ -385,47 +409,64 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
               <div className="flex items-center gap-2">
                 <div className="flex gap-0.5" aria-label="Nota: 4.8 de 5 estrelas">
                   {[1,2,3,4,5].map((n) => (
-                    <Star key={n} size={16} fill={n <= 4 ? "#f5a623" : "none"} color={n <= 5 ? "#f5a623" : "#4a4a6a"} aria-hidden="true" />
+                    <Star key={n} size={18} fill={n <= 4 ? "#ffb84d" : "rgba(255,184,77,0.25)"} color="#ffb84d" aria-hidden="true" />
                   ))}
                 </div>
                 <span className="text-white font-bold text-lg">4.8</span>
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>/5.0 • 1.2k avaliações PCD</span>
+                <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>/5 · 1.2k avaliações PCD</span>
               </div>
 
-              <p className="text-sm leading-relaxed max-w-xl" style={{ color: "rgba(255,255,255,0.55)" }}>
+              {/* Available on (platforms preview) */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
+                  Disponível em:
+                </span>
+                <div className="flex items-center gap-1.5" aria-label="Plataformas: Prime Video, Max, Disney+">
+                  {(["prime", "hbomax", "disney"] as PlatformId[]).map((p) => {
+                    const cfg = platformConfig[p];
+                    return (
+                      <span
+                        key={p}
+                        className="flex items-center justify-center rounded-md text-white font-black"
+                        style={{ backgroundColor: cfg.color, width: 26, height: 26, fontSize: 10 }}
+                        title={cfg.name}
+                        aria-hidden="true"
+                      >
+                        {cfg.initials}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <p className="text-sm leading-relaxed max-w-xl" style={{ color: "rgba(255,255,255,0.75)" }}>
                 Uma história emocionante sobre superação e inclusão, com suporte completo a recursos de acessibilidade para que todos possam desfrutar da experiência cinematográfica.
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-wrap gap-3 mt-1">
+              <div className="flex flex-wrap gap-3 mt-2">
                 <button
+                  type="button"
                   onClick={() => setStreamingOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-xl font-bold text-white text-sm px-6 transition-all active:scale-[0.98] focus:outline-none"
-                  style={{ backgroundColor: "#0073e6", height: 48, minWidth: 44 }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = "#005bb5")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = "#0073e6")}
-                  onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-                  onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
-                  aria-label="Ver opções de streaming"
+                  className="af-focus inline-flex items-center gap-2 rounded-xl font-bold text-white text-sm px-6 transition-transform hover:scale-[1.03] active:scale-[0.98]"
+                  style={{ backgroundColor: "#0073e6", height: 48, minWidth: 44, boxShadow: "0 6px 18px rgba(0,115,230,0.4)" }}
+                  aria-label="Ver onde assistir este filme"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                  Ver em...
+                  <Play size={16} fill="white" aria-hidden="true" />
+                  Onde assistir
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setSaved(!saved)}
-                  className="inline-flex items-center gap-2 rounded-xl font-bold text-sm px-6 transition-all focus:outline-none"
+                  className="af-focus-light inline-flex items-center gap-2 rounded-xl font-bold text-sm px-6 transition-colors"
                   style={{
                     height: 48,
-                    backgroundColor: "transparent",
-                    border: "2px solid rgba(255,255,255,0.4)",
+                    backgroundColor: saved ? "rgba(255,255,255,0.15)" : "transparent",
+                    border: "2px solid rgba(255,255,255,0.55)",
                     color: "white",
                     minWidth: 44,
                   }}
-                  onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-                  onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
                   aria-label={saved ? "Remover da lista" : "Salvar na lista"}
                   aria-pressed={saved}
                 >
@@ -451,7 +492,7 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
                   <span className="mb-1.5 font-semibold text-xl" style={{ color: "rgba(255,255,255,0.45)" }}>/10</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Star size={14} fill="#f5a623" color="#f5a623" aria-hidden="true" />
+                  <Star size={14} fill="#b35d00" color="#b35d00" aria-hidden="true" />
                   <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>Avaliação Geral</span>
                 </div>
               </div>
@@ -480,7 +521,7 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
                   <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: d.color }} aria-hidden="true" />
                   <div>
                     <div className="text-sm font-bold" style={{ color: "#1a1a2e" }}>{d.label}</div>
-                    <div className="text-xs mt-0.5" style={{ color: "#6b6b8a" }}>{d.detail}</div>
+                    <div className="text-xs mt-0.5" style={{ color: "#4a4a6a" }}>{d.detail}</div>
                   </div>
                 </div>
               ))}
@@ -513,10 +554,10 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
                 <span className="font-black" style={{ fontSize: 56, color: "#1a1a2e", lineHeight: 1 }}>4.8</span>
                 <div className="flex gap-0.5 my-1" aria-label="4.8 de 5 estrelas">
                   {[1,2,3,4,5].map((n) => (
-                    <Star key={n} size={16} fill={n <= 4 ? "#f5a623" : "none"} color="#f5a623" aria-hidden="true" />
+                    <Star key={n} size={16} fill={n <= 4 ? "#b35d00" : "none"} color="#b35d00" aria-hidden="true" />
                   ))}
                 </div>
-                <span className="text-sm" style={{ color: "#6b6b8a" }}>1.2k avaliações</span>
+                <span className="text-sm" style={{ color: "#4a4a6a" }}>1.2k avaliações</span>
               </div>
 
               <div className="flex-1 w-full flex flex-col gap-2">
@@ -524,12 +565,12 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
                   const pcts: Record<number,number> = { 5:68,4:20,3:7,2:3,1:2 };
                   return (
                     <div key={star} className="flex items-center gap-2">
-                      <span className="text-xs w-4 text-right" style={{ color: "#6b6b8a" }}>{star}</span>
-                      <Star size={10} fill="#f5a623" color="#f5a623" aria-hidden="true" />
+                      <span className="text-xs w-4 text-right" style={{ color: "#4a4a6a" }}>{star}</span>
+                      <Star size={10} fill="#b35d00" color="#b35d00" aria-hidden="true" />
                       <div className="flex-1 rounded-full overflow-hidden" style={{ height: 8, backgroundColor: "#f0f2f5" }} role="progressbar" aria-valuenow={pcts[star]} aria-valuemin={0} aria-valuemax={100} aria-label={`${star} estrelas: ${pcts[star]}%`}>
-                        <div className="h-full rounded-full" style={{ width: `${pcts[star]}%`, backgroundColor: "#f5a623" }} />
+                        <div className="h-full rounded-full" style={{ width: `${pcts[star]}%`, backgroundColor: "#b35d00" }} />
                       </div>
-                      <span className="text-xs w-8" style={{ color: "#6b6b8a" }}>{pcts[star]}%</span>
+                      <span className="text-xs w-8" style={{ color: "#4a4a6a" }}>{pcts[star]}%</span>
                     </div>
                   );
                 })}
@@ -540,23 +581,22 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
           {/* Filter tabs */}
           <div className="flex gap-2 mb-5 overflow-x-auto pb-1" role="tablist" aria-label="Filtrar avaliações por tipo de deficiência">
             {reviewFilters.map((f) => {
-              const colors: Record<string,string> = { todos:"#0073e6", visual:"#e6308a", auditiva:"#0073e6", cognitiva:"#5ba300" };
+              const colors: Record<string,string> = { todos:"#0073e6", visual:"#c01a6f", auditiva:"#005bb5", cognitiva:"#3d7500" };
               const active = reviewFilter === f.id;
               return (
                 <button
                   key={f.id}
+                  type="button"
                   role="tab"
                   aria-selected={active}
                   onClick={() => setReviewFilter(f.id)}
-                  className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all focus:outline-none"
+                  className="af-focus flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all"
                   style={{
-                    backgroundColor: active ? colors[f.id] : "#f0f4ff",
-                    color: active ? "white" : "#4a4a6a",
+                    backgroundColor: active ? colors[f.id] : "white",
+                    color: active ? "white" : "#1a1a2e",
                     border: `1.5px solid ${active ? colors[f.id] : "#d0d5e0"}`,
-                    minHeight: 36,
+                    minHeight: 44,
                   }}
-                  onFocus={(e) => { e.currentTarget.style.outline = `3px solid ${colors[f.id]}`; e.currentTarget.style.outlineOffset = "2px"; }}
-                  onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
                 >
                   {f.label}
                 </button>
@@ -578,6 +618,23 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
 
           {/* Write review */}
           <ReviewForm onRequireLogin={handleRequireLogin} />
+        </section>
+
+        {/* Similar titles */}
+        <section aria-label="Títulos similares acessíveis">
+          <h2 className="font-bold mb-4" style={{ color: "#1a1a2e", fontSize: 18 }}>
+            Outros títulos 100% acessíveis
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {ALL_CONTENT.filter((c) => c.perfect).slice(0, 8).map((c) => (
+              <ContentCard
+                key={c.id}
+                item={c}
+                onClick={() => onBack()}
+                onStreamingClick={() => setStreamingOpen(true)}
+              />
+            ))}
+          </div>
         </section>
       </div>
 

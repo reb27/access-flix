@@ -81,7 +81,7 @@ function TrendingCard({ item, onClick }: { item: ContentItem; onClick: () => voi
       <p className="mt-1.5 text-xs font-semibold leading-tight line-clamp-2" style={{ color: "#1a1a2e" }}>{item.title}</p>
       <div className="flex items-center gap-1 mt-0.5">
         <Star size={10} fill="#f5a623" color="#f5a623" aria-hidden="true" />
-        <span className="text-xs font-bold" style={{ color: "#6b6b8a" }}>{item.rating.toFixed(1)}</span>
+        <span className="text-xs font-bold" style={{ color: "#4a4a6a" }}>{item.rating.toFixed(1)}</span>
       </div>
       <div className="flex flex-wrap gap-0.5 mt-1">
         {item.badges.slice(0, 2).map((b) => (

@@ -21,11 +21,11 @@ export function MobileHeader({ onNavigate }: MobileHeaderProps) {
     >
       {/* Logo */}
       <button
+        type="button"
         onClick={() => onNavigate("home")}
         aria-label="AccessFlix — início"
-        className="flex items-center gap-2 focus:outline-none"
-        onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-        onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
+        className="af-focus flex items-center gap-2 rounded px-1"
+        style={{ minHeight: 44 }}
       >
         <svg width="26" height="26" viewBox="0 0 36 36" fill="none" aria-hidden="true">
           <defs>
@@ -45,12 +45,11 @@ export function MobileHeader({ onNavigate }: MobileHeaderProps) {
 
       {/* Search icon — opens full-screen search */}
       <button
+        type="button"
         onClick={() => onNavigate("mobilesearch")}
         aria-label="Buscar"
-        className="flex items-center justify-center rounded-xl transition-colors focus:outline-none"
-        style={{ width: 44, height: 44, color: "#4a4a6a" }}
-        onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-        onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
+        className="af-focus flex items-center justify-center rounded-xl transition-colors hover:bg-gray-100"
+        style={{ width: 44, height: 44, color: "#1a1a2e" }}
       >
         <Search size={22} aria-hidden="true" />
       </button>
@@ -87,21 +86,20 @@ export function MobileBottomNav({ onNavigate, currentPage, dark = false }: Mobil
         return (
           <button
             key={page}
+            type="button"
             onClick={() => onNavigate(page)}
             aria-label={label}
             aria-current={active ? "page" : undefined}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors focus:outline-none"
+            className="af-focus flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors"
             style={{ minHeight: 44 }}
-            onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "-2px"; }}
-            onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
           >
             <Icon
               size={22}
-              color={active ? (dark ? "#4da3ff" : "#0073e6") : (dark ? "rgba(255,255,255,0.45)" : "#9898b8")}
+              color={active ? (dark ? "#4da3ff" : "#0073e6") : (dark ? "rgba(255,255,255,0.45)" : "#4a4a6a")}
               strokeWidth={active ? 2.2 : 1.8}
               aria-hidden="true"
             />
-            <span style={{ fontSize: 11, fontWeight: active ? 700 : 400, color: active ? (dark ? "#4da3ff" : "#0073e6") : (dark ? "rgba(255,255,255,0.45)" : "#9898b8"), lineHeight: 1 }}>
+            <span style={{ fontSize: 11, fontWeight: active ? 700 : 400, color: active ? (dark ? "#4da3ff" : "#0073e6") : (dark ? "rgba(255,255,255,0.45)" : "#4a4a6a"), lineHeight: 1 }}>
               {label}
             </span>
           </button>

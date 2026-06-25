@@ -111,7 +111,7 @@ function AdvancedFiltersDrawer({ isOpen, onClose, activeFilters, onChange }: {
           <button onClick={onClose} aria-label="Fechar" className="flex items-center justify-center rounded-xl hover:bg-gray-100 focus:outline-none" style={{ width: 44, height: 44 }}
             onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
             onBlur={(e) => { e.currentTarget.style.outline = "none"; }}>
-            <X size={20} color="#6b6b8a" />
+            <X size={20} color="#4a4a6a" />
           </button>
         </div>
 
@@ -254,7 +254,7 @@ export function SearchPage({ query, activeChip, onSuggestionClick }: SearchPageP
         {/* Suggestions — shown when no query yet */}
         {!query && (
           <section aria-label="Sugestões de busca">
-            <h2 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: "#6b6b8a" }}>Sugestões</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider mb-3" style={{ color: "#4a4a6a" }}>Sugestões</h2>
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border: "1px solid #e8ecf0" }}>
               {suggestions.map((s, i) => (
                 <button
@@ -291,13 +291,13 @@ export function SearchPage({ query, activeChip, onSuggestionClick }: SearchPageP
               <h2 className="font-bold" style={{ color: "#1a1a2e", fontSize: 16 }}>
                 Resultados para <span style={{ color: "#0073e6" }}>"{query}"</span>
                 {activeFilterCount > 0 && (
-                  <span className="ml-2 text-sm font-normal" style={{ color: "#6b6b8a" }}>
+                  <span className="ml-2 text-sm font-normal" style={{ color: "#4a4a6a" }}>
                     — {activeFilterCount} filtro{activeFilterCount > 1 ? "s" : ""}
                   </span>
                 )}
               </h2>
               <div className="flex items-center gap-2">
-                {!loading && <span className="text-sm" style={{ color: "#6b6b8a" }}>{filteredResults.length} resultado{filteredResults.length !== 1 ? "s" : ""}</span>}
+                {!loading && <span className="text-sm" style={{ color: "#4a4a6a" }}>{filteredResults.length} resultado{filteredResults.length !== 1 ? "s" : ""}</span>}
                 <button
                   onClick={() => setAdvancedOpen(true)}
                   className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all relative focus:outline-none"
@@ -330,7 +330,7 @@ export function SearchPage({ query, activeChip, onSuggestionClick }: SearchPageP
               <div className="text-center py-16 bg-white rounded-2xl" role="status">
                 <div className="text-5xl mb-4" aria-hidden="true">🔍</div>
                 <p className="font-semibold mb-2" style={{ color: "#1a1a2e" }}>Nenhum resultado com esses filtros</p>
-                <p className="text-sm mb-4" style={{ color: "#6b6b8a" }}>Tente ampliar sua busca removendo alguns filtros.</p>
+                <p className="text-sm mb-4" style={{ color: "#4a4a6a" }}>Tente ampliar sua busca removendo alguns filtros.</p>
                 <button
                   onClick={() => setAdvancedFilters(emptyFilters)}
                   className="px-4 py-2 rounded-xl text-white text-sm font-semibold focus:outline-none"

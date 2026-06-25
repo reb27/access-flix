@@ -1,6 +1,12 @@
-import { useState } from "react";
-import { Eye, Ear, Brain, Hand } from "lucide-react";
-import { ContentCard, ALL_CONTENT } from "./ContentCard";
+import { useRef, useState } from "react";
+import {
+  Eye, Ear, Brain, Hand,
+  Sparkles, ChevronLeft, ChevronRight,
+  Award, Headphones, Hand as HandIcon, BookOpen, Star,
+} from "lucide-react";
+import { ContentCard, ALL_CONTENT, type ContentItem } from "./ContentCard";
+import { PlatformRanking } from "./PlatformRanking";
+import { GameRanking } from "./GameRanking";
 
 type Category = "visual" | "auditiva" | "cognitiva" | "motora";
 
@@ -11,107 +17,405 @@ export type DisabilityProfile = {
   motora: boolean;
 };
 
-type Page = "home" | "listing" | "detail" | "watch" | "profile" | "search" | "highcontrast";
+type Page = "home" | "listing" | "detail" | "watch" | "profile" | "search" | "highcontrast" | "createprofile"
+  | "category-visual" | "category-auditiva" | "category-cognitiva" | "category-motora";
 
 interface HomePageProps {
   onNavigate: (page: Page) => void;
   disabilityProfile?: DisabilityProfile;
+  hasProfile?: boolean;
   onShowStreaming?: () => void;
 }
 
-const categories: {
+type CategoryDef = {
   id: Category;
   Icon: React.ElementType;
   label: string;
   description: string;
   accent: string;
-}[] = [
-  { id: "visual",   Icon: Eye,   label: "Visual",   description: "Audiodescrição, alto contraste",  accent: "#e6308a" },
-  { id: "auditiva", Icon: Ear,   label: "Auditiva", description: "Legendas, Libras, sinais",        accent: "#0073e6" },
-  { id: "cognitiva",Icon: Brain, label: "Cognitiva",description: "Linguagem simplificada",          accent: "#5ba300" },
-  { id: "motora",   Icon: Hand,  label: "Motora",   description: "Controles adaptativos",           accent: "#f5a623" },
+  accentSelected: string;
+};
+
+/* All color pairs verified for WCAG AA contrast (≥4.5:1) on white or with white text */
+const categories: CategoryDef[] = [
+  { id: "visual",    Icon: Eye,   label: "Visual",    description: "Audiodescrição, alto contraste", accent: "#c01a6f", accentSelected: "#a01560" },
+  { id: "auditiva",  Icon: Ear,   label: "Auditiva",  description: "Legendas, Libras, sinais",       accent: "#0073e6", accentSelected: "#005bb5" },
+  { id: "cognitiva", Icon: Brain, label: "Cognitiva", description: "Linguagem simplificada",         accent: "#3d7500", accentSelected: "#2f5a00" },
+  { id: "motora",    Icon: Hand,  label: "Motora",    description: "Controles adaptativos",          accent: "#a35e00", accentSelected: "#7a4600" },
 ];
 
-export function HomePage({ onNavigate, disabilityProfile, onShowStreaming }: HomePageProps) {
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+function categoryMatches(card: ContentItem, cat: Category): boolean {
+  if (cat === "visual")    return card.badges.includes("AD");
+  if (cat === "auditiva")  return card.badges.includes("Leg") || card.badges.includes("Libras");
+  if (cat === "cognitiva") return card.badges.includes("Adapt");
+  if (cat === "motora")    return card.badges.includes("Adapt");
+  return true;
+}
 
-  const effectiveCategory = selectedCategory
-    ?? (disabilityProfile?.auditiva ? "auditiva"
-      : disabilityProfile?.visual ? "visual"
-      : disabilityProfile?.cognitiva ? "cognitiva"
-      : disabilityProfile?.motora ? "motora"
-      : null);
+type ShelfTheme = {
+  Icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
+  tint: string;
+};
 
-  const HOME_CARDS = ALL_CONTENT.slice(0, 8);
+function Shelf({
+  title,
+  subtitle,
+  theme,
+  items,
+  onItemClick,
+  onStreamingClick,
+}: {
+  title: string;
+  subtitle?: string;
+  theme: ShelfTheme;
+  items: ContentItem[];
+  onItemClick: () => void;
+  onStreamingClick?: () => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollBy = (dir: -1 | 1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+  };
 
-  const filteredContent = effectiveCategory
-    ? HOME_CARDS.filter((card) => {
-        if (effectiveCategory === "visual")    return card.badges.includes("AD");
-        if (effectiveCategory === "auditiva")  return card.badges.includes("Leg") || card.badges.includes("Libras");
-        if (effectiveCategory === "cognitiva") return card.badges.includes("AD");
-        if (effectiveCategory === "motora")    return card.badges.includes("Adapt");
-        return true;
-      })
-    : HOME_CARDS;
-
-  const handleCategoryClick = (id: Category) =>
-    setSelectedCategory((prev) => (prev === id ? null : id));
+  if (items.length === 0) return null;
 
   return (
-    <main id="main-content" className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
-      <h1
-        className="text-center mb-8 md:mb-10"
-        style={{ fontSize: "clamp(22px, 4vw, 30px)", fontWeight: 700, color: "#1a1a2e" }}
+    <section
+      aria-label={title}
+      className="mb-8 md:mb-10 rounded-3xl"
+      style={{ background: theme.tint, padding: "16px 16px 8px", border: "1px solid rgba(0,0,0,0.04)" }}
+    >
+      <div className="flex items-center justify-between mb-3 md:mb-4 pl-1">
+        <div className="flex items-center gap-3 min-w-0">
+          <span
+            className="flex items-center justify-center rounded-2xl flex-shrink-0"
+            style={{ width: 40, height: 40, backgroundColor: theme.iconBg, color: theme.iconColor }}
+            aria-hidden="true"
+          >
+            <theme.Icon size={22} />
+          </span>
+          <div className="min-w-0">
+            <h2
+              className="font-bold leading-tight truncate"
+              style={{ fontSize: "clamp(15px, 2vw, 19px)", color: "#1a1a2e" }}
+            >
+              {title}
+            </h2>
+            {subtitle && (
+              <p className="text-xs md:text-sm" style={{ color: "#4a4a6a" }}>
+                {subtitle} · {items.length} {items.length === 1 ? "título" : "títulos"}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="hidden md:flex gap-2 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => scrollBy(-1)}
+            aria-label={`Rolar ${title} para trás`}
+            className="af-icon-btn"
+          >
+            <ChevronLeft size={20} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollBy(1)}
+            aria-label={`Rolar ${title} para frente`}
+            className="af-icon-btn"
+          >
+            <ChevronRight size={20} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <div
+        ref={scrollRef}
+        className="flex gap-3 md:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory items-stretch"
+        style={{ scrollbarWidth: "thin" }}
       >
-        Encontre conteúdo acessível para você.
-      </h1>
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className="snap-start flex-shrink-0 flex"
+            style={{ width: "clamp(150px, 22vw, 200px)" }}
+          >
+            <ContentCard item={item} onClick={onItemClick} onStreamingClick={onStreamingClick} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
+function HeroPosterCluster() {
+  /* Decorative floating posters — aria-hidden. Each is a real poster from ALL_CONTENT. */
+  const featured = ALL_CONTENT.filter((c) => c.perfect).slice(0, 3);
+  return (
+    <div
+      className="af-hero-posters relative flex-shrink-0"
+      style={{ width: 320, height: 220 }}
+      aria-hidden="true"
+    >
+      {featured.map((item, i) => {
+        const positions = [
+          { left: 0,   top: 30, rotate: -8, z: 1, delay: "0s"   },
+          { left: 90,  top: 0,  rotate: 0,  z: 3, delay: "0.4s" },
+          { left: 195, top: 30, rotate: 8,  z: 2, delay: "0.8s" },
+        ];
+        const p = positions[i];
+        return (
+          <div
+            key={item.id}
+            className="af-hero-poster"
+            style={{
+              position: "absolute",
+              left: p.left,
+              top: p.top,
+              width: 110,
+              height: 165,
+              borderRadius: 14,
+              overflow: "hidden",
+              transform: `rotate(${p.rotate}deg)`,
+              boxShadow: "0 18px 40px rgba(0,0,0,0.35)",
+              border: "3px solid rgba(255,255,255,0.4)",
+              zIndex: p.z,
+              animationDelay: p.delay,
+              background: item.posterColor,
+            }}
+          >
+            <img
+              src={item.poster}
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              loading="lazy"
+            />
+            {/* "100%" sticker on top poster */}
+            {i === 1 && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 6,
+                  right: 6,
+                  backgroundColor: "#2f5a00",
+                  color: "white",
+                  fontSize: 9,
+                  fontWeight: 800,
+                  padding: "2px 6px",
+                  borderRadius: 999,
+                  boxShadow: "0 2px 6px rgba(47,90,0,0.4)",
+                }}
+              >
+                ✨ 100%
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {/* Sparkles */}
+      <span className="af-hero-twinkle" style={{ position: "absolute", left: 10,  top: 6,   fontSize: 22 }}>✨</span>
+      <span className="af-hero-twinkle af-hero-twinkle-2" style={{ position: "absolute", right: 0, bottom: 20, fontSize: 18 }}>⭐</span>
+      <span className="af-hero-twinkle af-hero-twinkle-3" style={{ position: "absolute", left: 140, bottom: 0, fontSize: 16 }}>✨</span>
+    </div>
+  );
+}
+
+export function HomePage({ onNavigate, disabilityProfile, hasProfile, onShowStreaming }: HomePageProps) {
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  const activeNeedsLabels = (() => {
+    if (!disabilityProfile) return [];
+    const out: string[] = [];
+    if (disabilityProfile.visual)    out.push("audiodescrição");
+    if (disabilityProfile.auditiva)  out.push("legendas e Libras");
+    if (disabilityProfile.cognitiva) out.push("linguagem simplificada");
+    if (disabilityProfile.motora)    out.push("controles adaptativos");
+    return out;
+  })();
+
+  // Shelves
+  const destaque = ALL_CONTENT.filter((c) => c.perfect).slice(0, 8);
+  const comAD = ALL_CONTENT.filter((c) => c.badges.includes("AD")).slice(0, 10);
+  const emLibras = ALL_CONTENT.filter((c) => c.badges.includes("Libras")).slice(0, 10);
+  const linguagemSimples = ALL_CONTENT.filter((c) => c.badges.includes("Adapt")).slice(0, 10);
+  const topRated = [...ALL_CONTENT].sort((a, b) => b.rating - a.rating).slice(0, 10);
+
+  const shelfThemes: Record<string, ShelfTheme> = {
+    destaque:  { Icon: Award,       iconBg: "#fff4d6", iconColor: "#7a4600", tint: "linear-gradient(180deg, #fffaeb 0%, #ffffff 100%)" },
+    ad:        { Icon: Headphones,  iconBg: "#d4edda", iconColor: "#1a4d1a", tint: "linear-gradient(180deg, #ecf7ef 0%, #ffffff 100%)" },
+    libras:    { Icon: HandIcon,    iconBg: "#fce4f0", iconColor: "#6b0038", tint: "linear-gradient(180deg, #fdeef5 0%, #ffffff 100%)" },
+    adapt:     { Icon: BookOpen,    iconBg: "#ede9fe", iconColor: "#3b0764", tint: "linear-gradient(180deg, #f3effe 0%, #ffffff 100%)" },
+    top:       { Icon: Star,        iconBg: "#cce0ff", iconColor: "#003366", tint: "linear-gradient(180deg, #eef4ff 0%, #ffffff 100%)" },
+  };
+
+  const filteredGrid = selectedCategory
+    ? ALL_CONTENT.filter((c) => categoryMatches(c, selectedCategory))
+    : [];
+
+  return (
+    <main id="main-content" className="max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
+      {/* Hero */}
+      <section aria-labelledby="hero-title" className="mb-8 md:mb-12">
+        <div
+          className="af-hero relative rounded-3xl p-6 md:p-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 overflow-hidden"
+          style={{
+            background:
+              "radial-gradient(circle at 80% 20%, rgba(255,255,255,0.18), transparent 50%), " +
+              "radial-gradient(circle at 20% 80%, rgba(229,48,138,0.5), transparent 60%), " +
+              "linear-gradient(135deg, #0073e6 0%, #5b3eb8 55%, #b51963 110%)",
+            color: "white",
+            boxShadow: "0 20px 60px rgba(91,62,184,0.25)",
+          }}
+        >
+          {/* Decorative bokeh circles */}
+          <div className="af-hero-bokeh" aria-hidden="true" />
+          <div className="af-hero-bokeh af-hero-bokeh-2" aria-hidden="true" />
+
+          <div className="flex-1 relative z-10 max-w-xl">
+            <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full" style={{ backgroundColor: "rgba(255,255,255,0.18)", backdropFilter: "blur(8px)" }}>
+              <Sparkles size={14} aria-hidden="true" />
+              <span className="text-xs font-bold tracking-wide uppercase">Hub PCD do Brasil</span>
+            </div>
+            <h1
+              id="hero-title"
+              className="font-black mb-3"
+              style={{ fontSize: "clamp(28px, 4.5vw, 44px)", lineHeight: 1.05, letterSpacing: "-0.02em" }}
+            >
+              {hasProfile
+                ? "Oi! Selecionamos uns títulos pra você."
+                : (
+                  <>
+                    Cinema, séries e games <br className="hidden md:inline" />
+                    <span style={{ color: "#ffe27a" }}>pra todo mundo.</span>
+                  </>
+                )}
+            </h1>
+            <p className="text-base md:text-lg opacity-95" style={{ maxWidth: 520, lineHeight: 1.5 }}>
+              {hasProfile && activeNeedsLabels.length > 0
+                ? `Filtrando por ${activeNeedsLabels.join(", ")}. Você pode mudar isso quando quiser.`
+                : "Audiodescrição, legendas, Libras, linguagem simplificada — avaliado por quem usa de verdade."}
+            </p>
+            <div className="flex flex-wrap gap-2 mt-4">
+              {!hasProfile ? (
+                <button
+                  type="button"
+                  onClick={() => onNavigate("createprofile")}
+                  className="af-focus rounded-full font-bold transition-transform hover:scale-[1.03] active:scale-[0.97] shadow-lg"
+                  style={{ backgroundColor: "white", color: "#0073e6", padding: "12px 20px", minHeight: 44, fontSize: 15 }}
+                >
+                  ✨ Personalizar minha experiência
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onNavigate("profile")}
+                  className="af-focus rounded-full font-bold transition-transform hover:scale-[1.03] active:scale-[0.97]"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    color: "white",
+                    border: "2px solid rgba(255,255,255,0.7)",
+                    padding: "10px 18px",
+                    minHeight: 44,
+                    fontSize: 14,
+                  }}
+                >
+                  Ajustar meu perfil
+                </button>
+              )}
+            </div>
+
+            {/* Quick shortcuts — point to rankings + categories below */}
+            <div className="flex flex-wrap gap-2 mt-4" aria-label="Atalhos">
+              {[
+                { id: "platforms",  label: "🏆 Ranking de plataformas", target: "platform-ranking-title" },
+                { id: "games",      label: "🎮 Top jogos acessíveis",    target: "game-ranking-title" },
+                { id: "categories", label: "📂 Categorias",              target: "categories-section" },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => document.getElementById(s.target)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  className="af-focus rounded-full font-semibold text-sm transition-colors"
+                  style={{
+                    padding: "8px 14px",
+                    backgroundColor: "rgba(255,255,255,0.18)",
+                    color: "white",
+                    border: "1px solid rgba(255,255,255,0.35)",
+                    backdropFilter: "blur(6px)",
+                    minHeight: 36,
+                  }}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="hidden lg:block flex-shrink-0">
+            <HeroPosterCluster />
+          </div>
+        </div>
+      </section>
+
+      {/* Screen-reader live region */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
-        {effectiveCategory
-          ? `Filtrado para acessibilidade ${effectiveCategory}. ${filteredContent.length} resultados.`
-          : `Mostrando todos os ${HOME_CARDS.length} conteúdos.`}
+        {selectedCategory
+          ? `Filtrado por acessibilidade ${selectedCategory}. ${filteredGrid.length} resultados.`
+          : "Mostrando todas as categorias."}
       </div>
 
+      {/* Featured rankings — moved up so they're seen, not buried */}
+      {!selectedCategory && (
+        <>
+          <PlatformRanking />
+          <GameRanking />
+        </>
+      )}
+
       {/* Category Cards */}
-      <section aria-label="Categorias de acessibilidade" className="mb-10 md:mb-14">
-        {/* Mobile: 2-col, Tablet+: 4-col */}
+      <section id="categories-section" aria-label="Categorias de acessibilidade" className="mb-8 md:mb-12">
+        <h2 className="sr-only" id="categories-section-title">Filtrar por categoria</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
           {categories.map((cat) => {
-            const isSelected = effectiveCategory === cat.id;
+            const isSelected = selectedCategory === cat.id;
+            const bg = isSelected ? cat.accentSelected : "white";
+            const fg = isSelected ? "white" : cat.accent;
             return (
               <button
                 key={cat.id}
-                onClick={() => handleCategoryClick(cat.id)}
+                type="button"
+                onClick={() => onNavigate(`category-${cat.id}` as Page)}
                 aria-pressed={isSelected}
-                aria-label={`Acessibilidade ${cat.label}${isSelected ? ", selecionado" : ""}`}
-                className="rounded-2xl flex flex-col items-center gap-3 md:gap-4 transition-all duration-200 cursor-pointer"
+                aria-label={`Abrir página de acessibilidade ${cat.label}`}
+                className="af-focus af-category-card rounded-2xl flex flex-col items-center gap-3 md:gap-4 cursor-pointer"
                 style={{
                   padding: "clamp(16px,3vw,28px) 12px",
-                  backgroundColor: isSelected ? cat.accent : "white",
-                  color: isSelected ? "white" : cat.accent,
+                  backgroundColor: bg,
+                  color: fg,
                   border: `2px solid ${cat.accent}`,
-                  boxShadow: isSelected ? `0 8px 24px ${cat.accent}44` : "0 2px 8px rgba(0,0,0,0.06)",
+                  boxShadow: isSelected
+                    ? `0 10px 28px ${cat.accentSelected}55`
+                    : "0 2px 8px rgba(0,0,0,0.06)",
                   minHeight: 44,
                 }}
-                onFocus={(e) => { e.currentTarget.style.outline = `3px solid ${cat.accent}`; e.currentTarget.style.outlineOffset = "2px"; }}
-                onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
               >
                 <div
-                  className="flex items-center justify-center rounded-xl transition-colors"
+                  className="flex items-center justify-center rounded-2xl"
                   style={{
-                    width: 52,
-                    height: 52,
-                    backgroundColor: isSelected ? "rgba(255,255,255,0.2)" : `${cat.accent}18`,
+                    width: 56,
+                    height: 56,
+                    backgroundColor: isSelected ? "rgba(255,255,255,0.22)" : `${cat.accent}15`,
                   }}
                   aria-hidden="true"
                 >
-                  <cat.Icon size={28} />
+                  <cat.Icon size={30} />
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
                   <span className="text-sm font-bold" style={{ lineHeight: 1.2 }}>{cat.label}</span>
                   <span
                     className="text-xs text-center leading-tight hidden md:block"
-                    style={{ opacity: isSelected ? 0.85 : 0.65 }}
+                    style={{ opacity: isSelected ? 0.94 : 0.8 }}
                   >
                     {cat.description}
                   </span>
@@ -122,42 +426,91 @@ export function HomePage({ onNavigate, disabilityProfile, onShowStreaming }: Hom
         </div>
       </section>
 
-      {/* Content Grid */}
-      <section aria-label="Melhores avaliados pela comunidade PCD">
-        <div className="flex items-center justify-between mb-5 md:mb-6">
-          <h2 style={{ fontSize: "clamp(16px, 2.5vw, 20px)", fontWeight: 700, color: "#0073e6" }}>
-            Melhores Avaliados pela Comunidade PCD
-          </h2>
-          <button
-            onClick={() => onNavigate("listing")}
-            className="text-sm font-semibold hover:underline flex-shrink-0"
-            style={{ color: "#0073e6", minHeight: 44, padding: "0 8px" }}
-            onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-            onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
-          >
-            Ver todos →
-          </button>
-        </div>
-
-        {filteredContent.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl bg-white" role="status">
-            <p className="font-semibold mb-2" style={{ color: "#4a4a6a" }}>Nenhum conteúdo encontrado</p>
-            <p className="text-sm" style={{ color: "#6b6b8a" }}>Tente selecionar outra categoria.</p>
-          </div>
+      {/* Either filtered grid (category active) or shelves (default) */}
+      <div id="af-shelves">
+        {selectedCategory ? (
+          <section aria-label={`Conteúdo filtrado por acessibilidade ${selectedCategory}`}>
+            <div className="flex items-center justify-between mb-5 md:mb-6">
+              <h2 className="font-bold" style={{ fontSize: "clamp(16px, 2.5vw, 20px)", color: "#1a1a2e" }}>
+                {filteredGrid.length} {filteredGrid.length === 1 ? "resultado" : "resultados"} para acessibilidade {selectedCategory}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(null)}
+                className="af-focus text-sm font-semibold hover:underline"
+                style={{ color: "#0073e6", minHeight: 44, padding: "0 8px" }}
+              >
+                Limpar filtro
+              </button>
+            </div>
+            {filteredGrid.length === 0 ? (
+              <div className="text-center py-16 rounded-3xl bg-white" role="status">
+                <div style={{ fontSize: 48 }} aria-hidden="true">🔍</div>
+                <p className="font-semibold mt-3 mb-1" style={{ color: "#1a1a2e" }}>
+                  Nada por aqui ainda
+                </p>
+                <p className="text-sm" style={{ color: "#4a4a6a" }}>
+                  Tente outra categoria de acessibilidade.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+                {filteredGrid.map((card) => (
+                  <ContentCard
+                    key={card.id}
+                    item={card}
+                    onClick={() => onNavigate("detail")}
+                    onStreamingClick={onShowStreaming}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
         ) : (
-          /* Mobile: 2-col, Tablet: 3-col, Desktop: 4-col */
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
-            {filteredContent.map((card) => (
-              <ContentCard
-                key={card.id}
-                item={card}
-                onClick={() => onNavigate("detail")}
-                onStreamingClick={onShowStreaming}
-              />
-            ))}
-          </div>
+          <>
+            <Shelf
+              title="Em destaque · 100% acessível"
+              subtitle="Os queridinhos da comunidade"
+              theme={shelfThemes.destaque}
+              items={destaque}
+              onItemClick={() => onNavigate("detail")}
+              onStreamingClick={onShowStreaming}
+            />
+            <Shelf
+              title="Com audiodescrição"
+              subtitle="Para quem ouve a história"
+              theme={shelfThemes.ad}
+              items={comAD}
+              onItemClick={() => onNavigate("detail")}
+              onStreamingClick={onShowStreaming}
+            />
+            <Shelf
+              title="Com intérprete de Libras"
+              subtitle="Janela de Libras incluída"
+              theme={shelfThemes.libras}
+              items={emLibras}
+              onItemClick={() => onNavigate("detail")}
+              onStreamingClick={onShowStreaming}
+            />
+            <Shelf
+              title="Linguagem simplificada"
+              subtitle="Mais fácil de acompanhar"
+              theme={shelfThemes.adapt}
+              items={linguagemSimples}
+              onItemClick={() => onNavigate("detail")}
+              onStreamingClick={onShowStreaming}
+            />
+            <Shelf
+              title="Top da comunidade PCD"
+              subtitle="Melhores avaliações"
+              theme={shelfThemes.top}
+              items={topRated}
+              onItemClick={() => onNavigate("detail")}
+              onStreamingClick={onShowStreaming}
+            />
+          </>
         )}
-      </section>
+      </div>
     </main>
   );
 }

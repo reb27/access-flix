@@ -112,7 +112,7 @@ export function OnboardingModal({ onClose, onCreateProfile, onGoToCreateProfile 
             ["--tw-ring-color" as string]: "#0073e6",
           }}
         >
-          <X size={20} color="#6b6b8a" aria-hidden="true" />
+          <X size={20} color="#4a4a6a" aria-hidden="true" />
         </button>
 
         {/* Icon — single UserCircle, perfectly centered, no transforms */}
@@ -202,7 +202,7 @@ export function OnboardingModal({ onClose, onCreateProfile, onGoToCreateProfile 
                 <span className="text-sm font-semibold" style={{ color: isSelected ? cat.accentColor : "#1a1a2e" }}>
                   {cat.label}
                 </span>
-                <span className="text-xs text-center leading-tight" style={{ color: "#6b6b8a" }}>
+                <span className="text-xs text-center leading-tight" style={{ color: "#4a4a6a" }}>
                   {cat.description}
                 </span>
               </button>
@@ -232,7 +232,7 @@ export function OnboardingModal({ onClose, onCreateProfile, onGoToCreateProfile 
         <button
           onClick={onClose}
           className="w-full text-center underline focus:outline-none focus:ring-2 rounded py-2"
-          style={{ color: "#6b6b8a", fontSize: 14, ["--tw-ring-color" as string]: "#0073e6" }}
+          style={{ color: "#4a4a6a", fontSize: 14, ["--tw-ring-color" as string]: "#0073e6" }}
           onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
           onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
         >
