@@ -234,7 +234,7 @@ function NeedCardButton({
       <span
         className="text-center leading-tight"
         style={{
-          fontSize: 11,
+          fontSize: 13,
           fontWeight: 700,
           color: selected ? groupColor : "#2d2d44",
           maxWidth: 72,

@@ -24,6 +24,10 @@ interface HomePageProps {
   onNavigate: (page: Page) => void;
   disabilityProfile?: DisabilityProfile;
   hasProfile?: boolean;
+  selectedNeeds?: string[];
+  contentPrefs?: string[];     // filmes / series / jogos / docs
+  streamingPrefs?: string[];   // netflix / prime / disney / globoplay / crunchyroll / hbomax
+  onItemClick?: (item: ContentItem) => void;
   onShowStreaming?: () => void;
 }
 
@@ -71,7 +75,7 @@ function Shelf({
   subtitle?: string;
   theme: ShelfTheme;
   items: ContentItem[];
-  onItemClick: () => void;
+  onItemClick: (item: ContentItem) => void;
   onStreamingClick?: () => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -142,7 +146,7 @@ function Shelf({
             className="snap-start flex-shrink-0 flex"
             style={{ width: "clamp(150px, 22vw, 200px)" }}
           >
-            <ContentCard item={item} onClick={onItemClick} onStreamingClick={onStreamingClick} />
+            <ContentCard item={item} onClick={() => onItemClick(item)} onStreamingClick={onStreamingClick} />
           </div>
         ))}
       </div>
@@ -201,7 +205,7 @@ function HeroPosterCluster() {
                   right: 6,
                   backgroundColor: "#2f5a00",
                   color: "white",
-                  fontSize: 9,
+                  fontSize: 12,
                   fontWeight: 800,
                   padding: "2px 6px",
                   borderRadius: 999,
@@ -222,8 +226,42 @@ function HeroPosterCluster() {
   );
 }
 
-export function HomePage({ onNavigate, disabilityProfile, hasProfile, onShowStreaming }: HomePageProps) {
+export function HomePage({ onNavigate, disabilityProfile, hasProfile, selectedNeeds = [], contentPrefs = [], streamingPrefs = [], onItemClick, onShowStreaming }: HomePageProps) {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  /* Open detail: prefer the item-aware callback; fall back to plain navigate */
+  const openItem = (item: ContentItem) => {
+    if (onItemClick) onItemClick(item);
+    else onNavigate("detail");
+  };
+
+  /* ── Personalization helpers ── */
+  /* Map needs → required badges */
+  const needsBadges = (() => {
+    const out: ContentItem["badges"] = [];
+    if (selectedNeeds.some((n) => ["baixa_visao", "cegueira", "daltonismo"].includes(n))) out.push("AD");
+    if (selectedNeeds.some((n) => ["surdez", "baixa_audicao"].includes(n))) out.push("Leg");
+    if (selectedNeeds.includes("libras")) out.push("Libras");
+    if (selectedNeeds.some((n) => ["tdah", "autismo", "dislexia", "ansiedade", "def_intelectual", "motora_fina", "eye_tracking"].includes(n))) out.push("Adapt");
+    return Array.from(new Set(out));
+  })();
+
+  /* Filter the whole catalog by content-type prefs (Filmes/Séries/Jogos) and streaming prefs */
+  const catalogForUser = (() => {
+    const typeMap: Record<string, ContentItem["type"]> = { filmes: "Filmes", series: "Séries", jogos: "Jogos", anime: "Anime", docs: "Documentário" };
+    const wantedTypes = contentPrefs.map((p) => typeMap[p]).filter(Boolean);
+    return ALL_CONTENT.filter((c) => {
+      if (wantedTypes.length > 0 && !wantedTypes.includes(c.type)) return false;
+      if (streamingPrefs.length > 0 && c.platforms.length > 0
+          && !c.platforms.some((p) => streamingPrefs.includes(p))) return false;
+      return true;
+    });
+  })();
+
+  /* Content matching ALL of the user's accessibility needs (most personal shelf) */
+  const personalizedItems = hasProfile && needsBadges.length > 0
+    ? catalogForUser.filter((c) => needsBadges.every((b) => c.badges.includes(b)))
+    : [];
 
   const activeNeedsLabels = (() => {
     if (!disabilityProfile) return [];
@@ -236,13 +274,18 @@ export function HomePage({ onNavigate, disabilityProfile, hasProfile, onShowStre
   })();
 
   // Shelves
-  const destaque = ALL_CONTENT.filter((c) => c.perfect).slice(0, 8);
-  const comAD = ALL_CONTENT.filter((c) => c.badges.includes("AD")).slice(0, 10);
-  const emLibras = ALL_CONTENT.filter((c) => c.badges.includes("Libras")).slice(0, 10);
-  const linguagemSimples = ALL_CONTENT.filter((c) => c.badges.includes("Adapt")).slice(0, 10);
-  const topRated = [...ALL_CONTENT].sort((a, b) => b.rating - a.rating).slice(0, 10);
+  const destaque = catalogForUser.filter((c) => c.perfect).slice(0, 8);
+  const comAD = catalogForUser.filter((c) => c.badges.includes("AD")).slice(0, 10);
+  const emLibras = catalogForUser.filter((c) => c.badges.includes("Libras")).slice(0, 10);
+  const linguagemSimples = catalogForUser.filter((c) => c.badges.includes("Adapt")).slice(0, 10);
+  const animes = catalogForUser.filter((c) => c.type === "Anime").slice(0, 10);
+  const docs = catalogForUser.filter((c) => c.type === "Documentário").slice(0, 10);
+  const topRated = [...catalogForUser].sort((a, b) => b.rating - a.rating).slice(0, 10);
 
   const shelfThemes: Record<string, ShelfTheme> = {
+    foryou:    { Icon: Sparkles,    iconBg: "#fef3c7", iconColor: "#7a4600", tint: "linear-gradient(180deg, #fffbeb 0%, #ffffff 100%)" },
+    anime:     { Icon: Sparkles,    iconBg: "#fce7f3", iconColor: "#a01560", tint: "linear-gradient(180deg, #fdf2f8 0%, #ffffff 100%)" },
+    doc:       { Icon: BookOpen,    iconBg: "#dbeafe", iconColor: "#1e3a8a", tint: "linear-gradient(180deg, #eff6ff 0%, #ffffff 100%)" },
     destaque:  { Icon: Award,       iconBg: "#fff4d6", iconColor: "#7a4600", tint: "linear-gradient(180deg, #fffaeb 0%, #ffffff 100%)" },
     ad:        { Icon: Headphones,  iconBg: "#d4edda", iconColor: "#1a4d1a", tint: "linear-gradient(180deg, #ecf7ef 0%, #ffffff 100%)" },
     libras:    { Icon: HandIcon,    iconBg: "#fce4f0", iconColor: "#6b0038", tint: "linear-gradient(180deg, #fdeef5 0%, #ffffff 100%)" },
@@ -365,14 +408,6 @@ export function HomePage({ onNavigate, disabilityProfile, hasProfile, onShowStre
           : "Mostrando todas as categorias."}
       </div>
 
-      {/* Featured rankings — moved up so they're seen, not buried */}
-      {!selectedCategory && (
-        <>
-          <PlatformRanking />
-          <GameRanking />
-        </>
-      )}
-
       {/* Category Cards */}
       <section id="categories-section" aria-label="Categorias de acessibilidade" className="mb-8 md:mb-12">
         <h2 className="sr-only" id="categories-section-title">Filtrar por categoria</h2>
@@ -426,6 +461,14 @@ export function HomePage({ onNavigate, disabilityProfile, hasProfile, onShowStre
         </div>
       </section>
 
+      {/* Rankings between categories and shelves */}
+      {!selectedCategory && (
+        <>
+          <PlatformRanking needsBadges={needsBadges} />
+          <GameRanking />
+        </>
+      )}
+
       {/* Either filtered grid (category active) or shelves (default) */}
       <div id="af-shelves">
         {selectedCategory ? (
@@ -459,7 +502,7 @@ export function HomePage({ onNavigate, disabilityProfile, hasProfile, onShowStre
                   <ContentCard
                     key={card.id}
                     item={card}
-                    onClick={() => onNavigate("detail")}
+                    onClick={() => openItem(card)}
                     onStreamingClick={onShowStreaming}
                   />
                 ))}
@@ -468,46 +511,193 @@ export function HomePage({ onNavigate, disabilityProfile, hasProfile, onShowStre
           </section>
         ) : (
           <>
-            <Shelf
-              title="Em destaque · 100% acessível"
-              subtitle="Os queridinhos da comunidade"
-              theme={shelfThemes.destaque}
-              items={destaque}
-              onItemClick={() => onNavigate("detail")}
-              onStreamingClick={onShowStreaming}
-            />
-            <Shelf
-              title="Com audiodescrição"
-              subtitle="Para quem ouve a história"
-              theme={shelfThemes.ad}
-              items={comAD}
-              onItemClick={() => onNavigate("detail")}
-              onStreamingClick={onShowStreaming}
-            />
-            <Shelf
-              title="Com intérprete de Libras"
-              subtitle="Janela de Libras incluída"
-              theme={shelfThemes.libras}
-              items={emLibras}
-              onItemClick={() => onNavigate("detail")}
-              onStreamingClick={onShowStreaming}
-            />
-            <Shelf
-              title="Linguagem simplificada"
-              subtitle="Mais fácil de acompanhar"
-              theme={shelfThemes.adapt}
-              items={linguagemSimples}
-              onItemClick={() => onNavigate("detail")}
-              onStreamingClick={onShowStreaming}
-            />
-            <Shelf
-              title="Top da comunidade PCD"
-              subtitle="Melhores avaliações"
-              theme={shelfThemes.top}
-              items={topRated}
-              onItemClick={() => onNavigate("detail")}
-              onStreamingClick={onShowStreaming}
-            />
+            {hasProfile ? (
+              <>
+                {/* Personalized banner — visible proof that the profile is shaping the feed */}
+                <div
+                  className="rounded-3xl p-5 mb-6"
+                  style={{
+                    background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+                    border: "2px solid #f5a623",
+                  }}
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <span style={{ fontSize: 28 }} aria-hidden="true">🎯</span>
+                    <div>
+                      <h2 className="font-bold mb-1" style={{ fontSize: 17, color: "#1a1a2e" }}>
+                        Modo personalizado ativo
+                      </h2>
+                      <p className="text-sm" style={{ color: "#4a4a6a" }}>
+                        Mostrando {catalogForUser.length} {catalogForUser.length === 1 ? "título" : "títulos"} compatíveis com seu perfil.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {needsBadges.map((b) => (
+                      <span key={b} className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: "#0073e6", color: "white" }}>
+                        ✓ {b}
+                      </span>
+                    ))}
+                    {contentPrefs.map((p) => (
+                      <span key={p} className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: "#3d7500", color: "white" }}>
+                        {p === "filmes" ? "🎬 Filmes" : p === "series" ? "📺 Séries" : p === "anime" ? "🎌 Animes" : p === "jogos" ? "🎮 Jogos" : "🎞️ Docs"}
+                      </span>
+                    ))}
+                    {streamingPrefs.map((p) => (
+                      <span key={p} className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: "#c01a6f", color: "white" }}>
+                        {p}
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => onNavigate("createprofile")}
+                      className="af-focus text-xs font-bold px-2.5 py-1 rounded-full"
+                      style={{ backgroundColor: "white", color: "#0073e6", border: "1.5px dashed #0073e6" }}
+                    >
+                      ✏ Editar perfil
+                    </button>
+                  </div>
+                </div>
+
+                {/* Personalized shelf — main feed when profile exists */}
+                {personalizedItems.length > 0 ? (
+                  <Shelf
+                    title="✨ Combina 100% com seu perfil"
+                    subtitle={`Tem ${needsBadges.join(" + ")}`}
+                    theme={shelfThemes.foryou}
+                    items={personalizedItems}
+                    onItemClick={openItem}
+                    onStreamingClick={onShowStreaming}
+                  />
+                ) : (
+                  <div className="rounded-3xl p-6 mb-6 text-center" style={{ background: "#fff", border: "1px dashed #d0d5e0" }}>
+                    <div style={{ fontSize: 36 }} aria-hidden="true">🔍</div>
+                    <p className="font-bold mt-2" style={{ color: "#1a1a2e" }}>
+                      Nenhum título combina com todos os recursos
+                    </p>
+                    <p className="text-sm mt-1" style={{ color: "#4a4a6a" }}>
+                      Você precisa de {needsBadges.join(" + ")} simultâneo. Veja parciais abaixo.
+                    </p>
+                  </div>
+                )}
+
+                {/* Only show shelves matching the user's actual needs */}
+                {needsBadges.includes("AD") && (
+                  <Shelf
+                    title="Com audiodescrição"
+                    subtitle="Para sua necessidade visual"
+                    theme={shelfThemes.ad}
+                    items={comAD}
+                    onItemClick={openItem}
+                    onStreamingClick={onShowStreaming}
+                  />
+                )}
+                {needsBadges.includes("Libras") && (
+                  <Shelf
+                    title="Com intérprete de Libras"
+                    subtitle="Janela de Libras incluída"
+                    theme={shelfThemes.libras}
+                    items={emLibras}
+                    onItemClick={openItem}
+                    onStreamingClick={onShowStreaming}
+                  />
+                )}
+                {needsBadges.includes("Adapt") && (
+                  <Shelf
+                    title="Linguagem simplificada"
+                    subtitle="Para sua necessidade cognitiva"
+                    theme={shelfThemes.adapt}
+                    items={linguagemSimples}
+                    onItemClick={openItem}
+                    onStreamingClick={onShowStreaming}
+                  />
+                )}
+                <Shelf
+                  title="🎌 Animes acessíveis"
+                  subtitle="Janela de Libras + legendas PT-BR"
+                  theme={shelfThemes.anime}
+                  items={animes}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+                <Shelf
+                  title="🎞️ Documentários"
+                  subtitle="Histórias reais, acessíveis pra todos"
+                  theme={shelfThemes.doc}
+                  items={docs}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+                <Shelf
+                  title="Outros recomendados"
+                  subtitle="Filtrados pelo seu perfil"
+                  theme={shelfThemes.top}
+                  items={topRated}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+              </>
+            ) : (
+              <>
+                {/* No profile — generic feed */}
+                <Shelf
+                  title="Em destaque · 100% acessível"
+                  subtitle="Os queridinhos da comunidade"
+                  theme={shelfThemes.destaque}
+                  items={destaque}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+                <Shelf
+                  title="Com audiodescrição"
+                  subtitle="Para quem ouve a história"
+                  theme={shelfThemes.ad}
+                  items={comAD}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+                <Shelf
+                  title="Com intérprete de Libras"
+                  subtitle="Janela de Libras incluída"
+                  theme={shelfThemes.libras}
+                  items={emLibras}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+                <Shelf
+                  title="Linguagem simplificada"
+                  subtitle="Mais fácil de acompanhar"
+                  theme={shelfThemes.adapt}
+                  items={linguagemSimples}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+                <Shelf
+                  title="🎌 Animes acessíveis"
+                  subtitle="Janela de Libras + legendas PT-BR"
+                  theme={shelfThemes.anime}
+                  items={animes}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+                <Shelf
+                  title="🎞️ Documentários"
+                  subtitle="Histórias reais, acessíveis pra todos"
+                  theme={shelfThemes.doc}
+                  items={docs}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+                <Shelf
+                  title="Top da comunidade PCD"
+                  subtitle="Melhores avaliações"
+                  theme={shelfThemes.top}
+                  items={topRated}
+                  onItemClick={openItem}
+                  onStreamingClick={onShowStreaming}
+                />
+              </>
+            )}
           </>
         )}
       </div>

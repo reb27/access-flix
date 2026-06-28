@@ -86,7 +86,7 @@ function TrendingCard({ item, onClick }: { item: ContentItem; onClick: () => voi
       <div className="flex flex-wrap gap-0.5 mt-1">
         {item.badges.slice(0, 2).map((b) => (
           <span key={b} className="font-bold px-1 py-0.5 rounded"
-            style={{ backgroundColor: badgeColors[b]?.bg ?? "#f0f0f0", color: badgeColors[b]?.text ?? "#333", fontSize: 9 }}>
+            style={{ backgroundColor: badgeColors[b]?.bg ?? "#f0f0f0", color: badgeColors[b]?.text ?? "#333", fontSize: 12 }}>
             {b}
           </span>
         ))}

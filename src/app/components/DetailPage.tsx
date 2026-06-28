@@ -177,7 +177,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
 }
 
 /* ── Inline review form ── */
-function ReviewForm({ onRequireLogin }: { onRequireLogin: () => void }) {
+function ReviewForm({ onSubmit, onRequireLogin }: { onSubmit: (r: ReviewItem) => void; onRequireLogin: () => void }) {
   const [rating, setRating] = useState(0);
   const [text, setText] = useState("");
   const [disabilities, setDisabilities] = useState<string[]>([]);
@@ -188,14 +188,43 @@ function ReviewForm({ onRequireLogin }: { onRequireLogin: () => void }) {
 
   const handleSubmit = () => {
     if (rating === 0) return;
+    /* Build the new review and prepend it to the list */
+    const firstDisability = disabilities[0] ?? "visual";
+    const disabilityLabel = firstDisability.charAt(0).toUpperCase() + firstDisability.slice(1);
+    const disabilityColor =
+      firstDisability === "visual" ? "#c01a6f"
+        : firstDisability === "auditiva" ? "#005bb5"
+        : firstDisability === "cognitiva" ? "#3d7500"
+        : "#a35e00";
+
+    const newReview: ReviewItem = {
+      id: Date.now(),
+      name: "Você",
+      anonymous: false,
+      disability: disabilityLabel,
+      disabilityColor,
+      rating,
+      date: new Date().toLocaleDateString("pt-BR", { month: "short", year: "numeric" }),
+      text: text.trim() || "Avaliação rápida — sem comentário escrito.",
+      helpful: 0,
+    };
+    onSubmit(newReview);
+    setSubmitted(true);
     onRequireLogin();
+    /* Reset form so user can submit another */
+    setTimeout(() => {
+      setRating(0);
+      setText("");
+      setDisabilities([]);
+      setSubmitted(false);
+    }, 2200);
   };
 
   if (submitted) {
     return (
-      <div className="bg-white rounded-2xl p-6 text-center">
+      <div className="bg-white rounded-2xl p-6 text-center" role="status" aria-live="polite">
         <div className="text-3xl mb-2" aria-hidden="true">🎉</div>
-        <p className="font-semibold" style={{ color: "#1a1a2e" }}>Avaliação publicada!</p>
+        <p className="font-semibold" style={{ color: "#1a1a2e", fontSize: 16 }}>Avaliação publicada!</p>
         <p className="text-sm mt-1" style={{ color: "#4a4a6a" }}>Obrigado por contribuir com a comunidade PCD.</p>
       </div>
     );
@@ -284,16 +313,47 @@ function ReviewForm({ onRequireLogin }: { onRequireLogin: () => void }) {
 
 /* ── Page ── */
 interface DetailPageProps {
+  /** Selected film/series/game. When null, falls back to mock data. */
+  item?: import("./ContentCard").ContentItem | null;
   onBack: () => void;
   onWatch: () => void;
+  /** Open another item (used by the similar titles section) */
+  onSelectItem?: (item: import("./ContentCard").ContentItem) => void;
   hasProfile?: boolean;
   onShowOnboarding?: () => void;
 }
 
-export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboarding }: DetailPageProps) {
+const badgeFullLabel: Record<string, string> = {
+  AD: "Audiodescrição",
+  Leg: "Legendas",
+  Libras: "Libras",
+  Adapt: "Linguagem adaptada",
+};
+const badgeBg: Record<string, string> = {
+  AD: "#1a4d1a",
+  Leg: "#003366",
+  Libras: "#6b0038",
+  Adapt: "#3b0764",
+};
+
+export function DetailPage({ item, onBack, onWatch, onSelectItem, hasProfile = false, onShowOnboarding }: DetailPageProps) {
   const [streamingOpen, setStreamingOpen] = useState(false);
   const [reviewFilter, setReviewFilter] = useState("todos");
   const [saved, setSaved] = useState(false);
+  const [reviews, setReviews] = useState<ReviewItem[]>(REVIEWS);
+
+  /* Use the clicked item when available; fall back to mock for legacy callers. */
+  const title = item?.title ?? "O Grande Filme Acessível";
+  const type = item?.type ?? "Filmes";
+  const rating = item?.rating ?? 4.8;
+  const badges = item?.badges ?? ["AD", "Leg", "Libras"];
+  const platforms: PlatformId[] = item?.platforms ?? ["prime", "hbomax", "disney"];
+  const isPerfect = item?.perfect ?? true;
+  const posterUrl = item?.poster;
+  const posterColor = item?.posterColor ?? "#6366f1";
+  const synopsis = type === "Jogos"
+    ? `Uma experiência de jogo com cuidado especial em acessibilidade — confira os recursos abaixo e leia avaliações reais de jogadores PCD.`
+    : `Uma história emocionante com suporte completo a recursos de acessibilidade para que todos possam desfrutar da experiência.`;
 
   const reviewFilters = [
     { id: "todos",    label: "Todos" },
@@ -303,8 +363,10 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
   ];
 
   const filteredReviews = reviewFilter === "todos"
-    ? REVIEWS
-    : REVIEWS.filter((r) => r.disability.toLowerCase() === reviewFilter);
+    ? reviews
+    : reviews.filter((r) => r.disability.toLowerCase() === reviewFilter);
+
+  const handleAddReview = (r: ReviewItem) => setReviews((prev) => [r, ...prev]);
 
   const handleRequireLogin = () => {
     if (!hasProfile) { onShowOnboarding?.(); }
@@ -327,7 +389,7 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
             type="button"
             onClick={onBack}
             className="af-focus-light inline-flex items-center gap-1.5 mb-6 md:mb-8 text-sm rounded transition-opacity hover:opacity-100"
-            style={{ color: "rgba(255,255,255,0.75)", minHeight: 44, padding: "0 4px" }}
+            style={{ color: "rgba(255,255,255,0.95)", minHeight: 44, padding: "0 4px" }}
             aria-label="Voltar para a listagem"
           >
             <ChevronLeft size={18} aria-hidden="true" />
@@ -339,29 +401,47 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
             <div
               className="flex-shrink-0 rounded-2xl overflow-hidden flex items-center justify-center self-center md:self-start relative"
               style={{
-                width: "min(200px, 45vw)", aspectRatio: "2/3",
-                background: "linear-gradient(145deg,#6366f1 0%,#8b5cf6 100%)",
-                boxShadow: "0 20px 60px rgba(99, 102, 241, 0.4)",
+                width: "min(220px, 50vw)", aspectRatio: "2/3",
+                background: posterUrl ? "#000" : `linear-gradient(145deg,${posterColor},${posterColor}cc)`,
+                boxShadow: `0 20px 60px ${posterColor}66`,
               }}
-              aria-label="Poster do filme" role="img"
+              aria-label={`Pôster de ${title}`}
+              role="img"
             >
-              <svg width="72" height="72" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-                <path d="M10 52L26 30L36 44L46 26L58 52H10Z" fill="white" fillOpacity="0.22" />
-                <circle cx="24" cy="20" r="7" fill="white" fillOpacity="0.22" />
-              </svg>
+              {posterUrl ? (
+                <img
+                  src={posterUrl}
+                  alt=""
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                />
+              ) : (
+                <svg width="72" height="72" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <path d="M10 52L26 30L36 44L46 26L58 52H10Z" fill="white" fillOpacity="0.22" />
+                  <circle cx="24" cy="20" r="7" fill="white" fillOpacity="0.22" />
+                </svg>
+              )}
               {/* 100% badge floating */}
+              {isPerfect && (
+                <div
+                  className="absolute top-2 right-2 flex items-center gap-1 rounded-full text-white"
+                  style={{
+                    backgroundColor: "#2f5a00",
+                    padding: "4px 9px",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    boxShadow: "0 2px 10px rgba(47,90,0,0.5)",
+                  }}
+                  aria-label="100% acessível"
+                >
+                  ✨ 100%
+                </div>
+              )}
               <div
-                className="absolute top-2 right-2 flex items-center gap-1 rounded-full text-white"
-                style={{
-                  backgroundColor: "#2f5a00",
-                  padding: "4px 9px",
-                  fontSize: 11,
-                  fontWeight: 800,
-                  boxShadow: "0 2px 10px rgba(47,90,0,0.5)",
-                }}
-                aria-label="100% acessível"
+                className="absolute bottom-2 left-2 rounded-full px-2 py-0.5 text-xs font-semibold"
+                style={{ backgroundColor: "rgba(0,0,0,0.65)", color: "white" }}
               >
-                ✨ 100%
+                {type}
               </div>
             </div>
 
@@ -369,24 +449,20 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
             <div className="flex flex-col gap-4 flex-1 w-full min-w-0">
               {/* Access feature badges */}
               <div className="flex flex-wrap gap-2" aria-label="Recursos de acessibilidade">
-                {[
-                  { id: "AD",     label: "Audiodescrição", bg: "#1a4d1a" },
-                  { id: "Leg",    label: "Legendas",       bg: "#003366" },
-                  { id: "Libras", label: "Libras",         bg: "#6b0038" },
-                ].map((b) => (
+                {badges.map((b) => (
                   <span
-                    key={b.id}
+                    key={b}
                     className="px-3 py-1.5 rounded-full text-white text-xs font-bold flex items-center gap-1.5"
-                    style={{ backgroundColor: b.bg, border: "1px solid rgba(255,255,255,0.15)" }}
+                    style={{ backgroundColor: badgeBg[b] ?? "#003366", border: "1px solid rgba(255,255,255,0.15)" }}
                   >
                     <span aria-hidden="true">✓</span>
-                    {b.label}
+                    {badgeFullLabel[b] ?? b}
                   </span>
                 ))}
               </div>
 
               <h1 className="text-white leading-tight" style={{ fontSize: "clamp(26px, 5vw, 40px)", fontWeight: 800 }}>
-                O Grande Filme Acessível
+                {title}
               </h1>
 
               {/* Metadata chips */}
@@ -407,40 +483,42 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
 
               {/* Rating */}
               <div className="flex items-center gap-2">
-                <div className="flex gap-0.5" aria-label="Nota: 4.8 de 5 estrelas">
+                <div className="flex gap-0.5" aria-label={`Nota: ${rating} de 5 estrelas`}>
                   {[1,2,3,4,5].map((n) => (
-                    <Star key={n} size={18} fill={n <= 4 ? "#ffb84d" : "rgba(255,184,77,0.25)"} color="#ffb84d" aria-hidden="true" />
+                    <Star key={n} size={18} fill={n <= Math.round(rating) ? "#ffb84d" : "rgba(255,184,77,0.25)"} color="#ffb84d" aria-hidden="true" />
                   ))}
                 </div>
-                <span className="text-white font-bold text-lg">4.8</span>
-                <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>/5 · 1.2k avaliações PCD</span>
+                <span className="text-white font-bold text-lg">{rating.toFixed(1)}</span>
+                <span className="text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>/5 · {item ? "avaliações da comunidade PCD" : "1.2k avaliações PCD"}</span>
               </div>
 
               {/* Available on (platforms preview) */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>
-                  Disponível em:
-                </span>
-                <div className="flex items-center gap-1.5" aria-label="Plataformas: Prime Video, Max, Disney+">
-                  {(["prime", "hbomax", "disney"] as PlatformId[]).map((p) => {
-                    const cfg = platformConfig[p];
-                    return (
-                      <span
-                        key={p}
-                        className="flex items-center justify-center rounded-md text-white font-black"
-                        style={{ backgroundColor: cfg.color, width: 26, height: 26, fontSize: 10 }}
-                        title={cfg.name}
-                        aria-hidden="true"
-                      >
-                        {cfg.initials}
-                      </span>
-                    );
-                  })}
+              {platforms.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.92)" }}>
+                    {type === "Jogos" ? "Disponível para:" : "Disponível em:"}
+                  </span>
+                  <div className="flex items-center gap-1.5" aria-label={`Plataformas: ${platforms.map((p) => platformConfig[p].name).join(", ")}`}>
+                    {platforms.map((p) => {
+                      const cfg = platformConfig[p];
+                      return (
+                        <span
+                          key={p}
+                          className="flex items-center justify-center rounded-md text-white font-black"
+                          style={{ backgroundColor: cfg.color, width: 28, height: 28, fontSize: 12 }}
+                          title={cfg.name}
+                          aria-hidden="true"
+                        >
+                          {cfg.initials}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <p className="text-sm leading-relaxed max-w-xl" style={{ color: "rgba(255,255,255,0.75)" }}>
-                Uma história emocionante sobre superação e inclusão, com suporte completo a recursos de acessibilidade para que todos possam desfrutar da experiência cinematográfica.
+              <p className="text-sm leading-relaxed max-w-xl" style={{ color: "rgba(255,255,255,0.92)" }}>
+                {synopsis}
               </p>
 
               {/* CTAs */}
@@ -463,7 +541,7 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
                   style={{
                     height: 48,
                     backgroundColor: saved ? "rgba(255,255,255,0.15)" : "transparent",
-                    border: "2px solid rgba(255,255,255,0.55)",
+                    border: "2px solid rgba(255,255,255,0.92)",
                     color: "white",
                     minWidth: 44,
                   }}
@@ -489,11 +567,11 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
               <div className="flex flex-col items-center gap-2 flex-shrink-0">
                 <div className="flex items-end gap-1 leading-none">
                   <span className="font-bold text-white" style={{ fontSize: 56, lineHeight: 1 }}>8.5</span>
-                  <span className="mb-1.5 font-semibold text-xl" style={{ color: "rgba(255,255,255,0.45)" }}>/10</span>
+                  <span className="mb-1.5 font-semibold text-xl" style={{ color: "rgba(255,255,255,0.92)" }}>/10</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Star size={14} fill="#b35d00" color="#b35d00" aria-hidden="true" />
-                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>Avaliação Geral</span>
+                  <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.95)" }}>Avaliação Geral</span>
                 </div>
               </div>
               <div className="self-stretch hidden md:block" style={{ width: 1, backgroundColor: "rgba(255,255,255,0.2)", minHeight: 80 }} aria-hidden="true" />
@@ -617,7 +695,7 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
           </div>
 
           {/* Write review */}
-          <ReviewForm onRequireLogin={handleRequireLogin} />
+          <ReviewForm onSubmit={handleAddReview} onRequireLogin={handleRequireLogin} />
         </section>
 
         {/* Similar titles */}
@@ -626,11 +704,11 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
             Outros títulos 100% acessíveis
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-            {ALL_CONTENT.filter((c) => c.perfect).slice(0, 8).map((c) => (
+            {ALL_CONTENT.filter((c) => c.perfect && c.id !== item?.id).slice(0, 8).map((c) => (
               <ContentCard
                 key={c.id}
                 item={c}
-                onClick={() => onBack()}
+                onClick={() => onSelectItem ? onSelectItem(c) : onBack()}
                 onStreamingClick={() => setStreamingOpen(true)}
               />
             ))}
@@ -641,7 +719,7 @@ export function DetailPage({ onBack, onWatch, hasProfile = false, onShowOnboardi
       {/* Streaming modal */}
       {streamingOpen && (
         <StreamingModal
-          title="O Grande Filme Acessível"
+          title={title}
           onClose={() => setStreamingOpen(false)}
           hasProfile={hasProfile}
         />

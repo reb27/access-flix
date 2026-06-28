@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Star, Play, Sparkles } from "lucide-react";
-import { gamePoster } from "./gamePoster";
+import { gamePoster, steamCover } from "./gamePoster";
 
 export type BadgeType = "AD" | "Leg" | "Libras" | "Adapt";
 
@@ -9,13 +9,15 @@ export type PlatformId = "netflix" | "prime" | "disney" | "globoplay" | "crunchy
 export interface ContentItem {
   id: number;
   title: string;
-  type: "Filmes" | "Séries" | "Jogos";
+  type: "Filmes" | "Séries" | "Jogos" | "Anime" | "Documentário";
   rating: number;
   badges: BadgeType[];
   platforms: PlatformId[];
   perfect: boolean;
   posterColor: string;
   poster: string;
+  /** Optional second-chance image (used when poster 404s, before the geometric placeholder) */
+  fallbackPoster?: string;
 }
 
 /* Badge config — bg/text pairs all pass WCAG AA (≥4.5:1) */
@@ -43,9 +45,10 @@ const posterColors = [
 
 const B = "https://image.tmdb.org/t/p/w500";
 
-function Poster({ src, color, title }: { src: string; color: string; title: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
+function Poster({ src, fallback, color, title }: { src: string; fallback?: string; color: string; title: string }) {
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const current = step === 0 ? src : step === 1 ? (fallback ?? "") : "";
+  if (step === 2 || !current) {
     return (
       <div
         className="w-full aspect-[2/3] flex items-center justify-center"
@@ -61,10 +64,10 @@ function Poster({ src, color, title }: { src: string; color: string; title: stri
   }
   return (
     <img
-      src={src}
+      src={current}
       alt={`Pôster de ${title}`}
       className="w-full aspect-[2/3] object-cover"
-      onError={() => setFailed(true)}
+      onError={() => setStep((s) => (s + 1) as 0 | 1 | 2)}
       loading="lazy"
     />
   );
@@ -99,7 +102,7 @@ export function ContentCard({ item, onClick, onStreamingClick }: ContentCardProp
       onMouseLeave={() => setHovered(false)}
     >
       <div className="relative overflow-hidden">
-        <Poster src={item.poster} color={item.posterColor} title={item.title} />
+        <Poster src={item.poster} fallback={item.fallbackPoster} color={item.posterColor} title={item.title} />
 
         {/* Medal for 100% accessible */}
         {item.perfect && (
@@ -108,7 +111,7 @@ export function ContentCard({ item, onClick, onStreamingClick }: ContentCardProp
             style={{
               backgroundColor: "#2f5a00",
               padding: "3px 8px",
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 800,
               boxShadow: "0 2px 8px rgba(47,90,0,0.4)",
             }}
@@ -196,7 +199,7 @@ export function ContentCard({ item, onClick, onStreamingClick }: ContentCardProp
                     backgroundColor: cfg.color,
                     width: 22,
                     height: 22,
-                    fontSize: 9,
+                    fontSize: 12,
                     letterSpacing: "-0.02em",
                   }}
                   title={cfg.name}
@@ -231,16 +234,28 @@ export const ALL_CONTENT: ContentItem[] = [
   { id: 10, title: "Alien: Romulus",                 type: "Filmes", rating: 4.5, badges: ["AD","Leg","Libras","Adapt"], platforms: ["disney","hbomax"],         perfect: true,  posterColor: posterColors[1], poster: `${B}/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg` },
   { id: 11, title: "The Legend of Zelda: Echoes",    type: "Jogos",  rating: 4.9, badges: ["Adapt","Leg"],               platforms: [],                          perfect: true,  posterColor: "#14b8a6", poster: gamePoster({ title: "Zelda: Echoes of Wisdom", studio: "Nintendo",     year: 2024, colors: ["#22c55e","#0f766e"], glyph: "🗡" }) },
   { id: 12, title: "Astro Bot",                      type: "Jogos",  rating: 4.8, badges: ["Adapt","AD","Leg"],          platforms: [],                          perfect: true,  posterColor: "#f59e0b", poster: gamePoster({ title: "Astro Bot",              studio: "Team Asobi",   year: 2024, colors: ["#3b82f6","#1e3a8a"], glyph: "🤖" }) },
-  { id: 13, title: "Black Myth: Wukong",             type: "Jogos",  rating: 4.7, badges: ["Leg","Adapt"],               platforms: [],                          perfect: false, posterColor: "#10b981", poster: gamePoster({ title: "Black Myth Wukong",      studio: "Game Science", year: 2024, colors: ["#dc2626","#7c2d12"], glyph: "🐒" }) },
+  { id: 13, title: "Black Myth: Wukong",             type: "Jogos",  rating: 4.7, badges: ["Leg","Adapt"],               platforms: [],                          perfect: false, posterColor: "#10b981", poster: steamCover(2358720), fallbackPoster: gamePoster({ title: "Black Myth Wukong",      studio: "Game Science", year: 2024, colors: ["#dc2626","#7c2d12"], glyph: "🐒" }) },
   { id: 14, title: "Shogun",                         type: "Séries", rating: 4.8, badges: ["Leg","Libras"],              platforms: ["disney"],                  perfect: false, posterColor: posterColors[5], poster: `${B}/7O4iVfOMQmdCSxhOg1WnzM1B5B0.jpg` },
   { id: 15, title: "Deadpool & Wolverine",           type: "Filmes", rating: 4.6, badges: ["AD","Leg","Libras"],         platforms: ["disney"],                  perfect: true,  posterColor: posterColors[6], poster: `${B}/8npISHPPbMHAeJWJbROLGJRCDot.jpg` },
   { id: 16, title: "Inside Out 2",                   type: "Filmes", rating: 4.7, badges: ["AD","Leg","Libras","Adapt"], platforms: ["disney"],                  perfect: true,  posterColor: posterColors[7], poster: `${B}/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg` },
-  { id: 17, title: "Hades II",                       type: "Jogos",  rating: 4.8, badges: ["Adapt","Leg"],               platforms: [],                          perfect: false, posterColor: "#7c3aed", poster: gamePoster({ title: "Hades II",                studio: "Supergiant",     year: 2024, colors: ["#7c3aed","#1e1b4b"], glyph: "⚔" }) },
-  { id: 18, title: "Elden Ring: Shadow of Erdtree",  type: "Jogos",  rating: 4.6, badges: ["Leg"],                       platforms: [],                          perfect: false, posterColor: "#a16207", poster: gamePoster({ title: "Elden Ring SoTE",        studio: "FromSoftware",   year: 2024, colors: ["#a16207","#451a03"], glyph: "🛡" }) },
+  { id: 17, title: "Hades II",                       type: "Jogos",  rating: 4.8, badges: ["Adapt","Leg"],               platforms: [],                          perfect: false, posterColor: "#7c3aed", poster: steamCover(1145350), fallbackPoster: gamePoster({ title: "Hades II",                studio: "Supergiant",     year: 2024, colors: ["#7c3aed","#1e1b4b"], glyph: "⚔" }) },
+  { id: 18, title: "Elden Ring: Shadow of Erdtree",  type: "Jogos",  rating: 4.6, badges: ["Leg"],                       platforms: [],                          perfect: false, posterColor: "#a16207", poster: steamCover(1245620), fallbackPoster: gamePoster({ title: "Elden Ring SoTE",        studio: "FromSoftware",   year: 2024, colors: ["#a16207","#451a03"], glyph: "🛡" }) },
   { id: 19, title: "The Penguin",                    type: "Séries", rating: 4.7, badges: ["AD","Leg","Libras"],         platforms: ["hbomax"],                  perfect: true,  posterColor: posterColors[2], poster: `${B}/ikuCpFMBpqFVCmSWqEFi1xHtfej.jpg` },
   { id: 20, title: "Agatha All Along",               type: "Séries", rating: 4.4, badges: ["Leg","Libras"],              platforms: ["disney"],                  perfect: false, posterColor: posterColors[3], poster: `${B}/6GDuHQAl0LQM2CJUPQyJPEKWygy.jpg` },
   { id: 21, title: "Longlegs",                       type: "Filmes", rating: 4.0, badges: ["AD","Leg"],                  platforms: ["prime"],                   perfect: false, posterColor: posterColors[4], poster: `${B}/qkQ8pOJOYEFsBQ3LKoRp44YMWpI.jpg` },
   { id: 22, title: "Wicked",                         type: "Filmes", rating: 4.8, badges: ["AD","Leg","Libras","Adapt"], platforms: ["prime","hbomax"],          perfect: true,  posterColor: posterColors[5], poster: `${B}/xbKFv4KF3sVYuWKllLlwWDmuZP7.jpg` },
-  { id: 23, title: "Hi-Fi Rush",                     type: "Jogos",  rating: 4.9, badges: ["Adapt","AD","Leg","Libras"], platforms: [],                          perfect: true,  posterColor: "#ec4899", poster: gamePoster({ title: "Hi-Fi Rush",              studio: "Tango Gameworks", year: 2023, colors: ["#ec4899","#7c2d12"], glyph: "🎸" }) },
+  { id: 23, title: "Hi-Fi Rush",                     type: "Jogos",  rating: 4.9, badges: ["Adapt","AD","Leg","Libras"], platforms: [],                          perfect: true,  posterColor: "#ec4899", poster: steamCover(1817230), fallbackPoster: gamePoster({ title: "Hi-Fi Rush",              studio: "Tango Gameworks", year: 2023, colors: ["#ec4899","#7c2d12"], glyph: "🎸" }) },
   { id: 24, title: "Concord",                        type: "Jogos",  rating: 3.8, badges: ["Leg","Adapt"],               platforms: [],                          perfect: false, posterColor: "#475569", poster: gamePoster({ title: "Concord",                 studio: "Firewalk",        year: 2024, colors: ["#475569","#0f172a"], glyph: "🚀" }) },
+
+  /* ── Animes (real TMDB IDs) ── */
+  { id: 25, title: "Demon Slayer",                   type: "Anime",        rating: 4.8, badges: ["Leg","Libras"],         platforms: ["crunchyroll","netflix"], perfect: false, posterColor: "#ec4899", poster: `${B}/wrCVHdkBlBWdJUZPvnJWcBRuhSY.jpg` },
+  { id: 26, title: "Spy x Family",                   type: "Anime",        rating: 4.7, badges: ["Leg","Adapt"],          platforms: ["crunchyroll"],           perfect: false, posterColor: "#10b981", poster: `${B}/qFD4mzNGsbT7s2sxk6S9TfgM52u.jpg` },
+  { id: 27, title: "Frieren: Beyond Journey's End",  type: "Anime",        rating: 4.9, badges: ["Leg","Libras","Adapt"], platforms: ["crunchyroll"],           perfect: true,  posterColor: "#7c3aed", poster: `${B}/dqZENchTd7lp5zht7BdlqM7RBhD.jpg` },
+  { id: 28, title: "Cyberpunk: Edgerunners",         type: "Anime",        rating: 4.8, badges: ["AD","Leg","Libras"],    platforms: ["netflix"],               perfect: true,  posterColor: "#facc15", poster: `${B}/h4VB6m0RwcicVEZvzftYZyKXs6K.jpg` },
+
+  /* ── Documentários (real TMDB IDs) ── */
+  { id: 29, title: "13th",                           type: "Documentário", rating: 4.9, badges: ["AD","Leg","Libras","Adapt"], platforms: ["netflix"],          perfect: true,  posterColor: "#1f2937", poster: `${B}/dXVo9eW4qvF3rNbJSPb1VfhKnHl.jpg` },
+  { id: 30, title: "My Octopus Teacher",             type: "Documentário", rating: 4.7, badges: ["AD","Leg","Libras"],    platforms: ["netflix"],               perfect: true,  posterColor: "#0891b2", poster: `${B}/8mfYUNzlH9eY1Q83lLqA0tFI5HZ.jpg` },
+  { id: 31, title: "Planeta Terra III",              type: "Documentário", rating: 4.8, badges: ["AD","Leg","Libras"],    platforms: ["globoplay","hbomax"],    perfect: true,  posterColor: "#16a34a", poster: `${B}/aoH7nxn1lLwLwl2ddCkahnpevh8.jpg` },
+  { id: 32, title: "Won't You Be My Neighbor?",      type: "Documentário", rating: 4.6, badges: ["AD","Leg","Adapt"],     platforms: ["prime"],                 perfect: false, posterColor: "#ef4444", poster: `${B}/lqXq0jrTYRsKklIBfXKj42pRJsI.jpg` },
 ];

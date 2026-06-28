@@ -96,7 +96,7 @@ function AccessBadge({ available, label }: { available: boolean; label: string }
       className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold"
       style={{
         backgroundColor: available ? "#d4edda" : "#f3f4f6",
-        color: available ? "#1a4d1a" : "#9ca3af",
+        color: available ? "#1a4d1a" : "#5b5b7a",
       }}
       aria-label={`${label}: ${available ? "disponível" : "indisponível"}`}
     >
@@ -199,7 +199,7 @@ export function StreamingModal({ title = "O Grande Filme Acessível", onClose, h
           className="px-6 py-3 flex-shrink-0"
           style={{ borderTop: "1px solid #e8ecf0" }}
         >
-          <p className="text-xs text-center" style={{ color: "#9ca3af" }}>
+          <p className="text-xs text-center" style={{ color: "#5b5b7a" }}>
             O AccessFlix não é responsável pelo conteúdo das plataformas externas.
           </p>
         </div>
@@ -227,7 +227,7 @@ function PlatformCard({ platform: p }: { platform: Platform }) {
       {p.best && (
         <div
           className="absolute -top-2 left-3 flex items-center gap-1 px-2 py-0.5 rounded-full text-white"
-          style={{ fontSize: 10, fontWeight: 700, backgroundColor: "#5ba300" }}
+          style={{ fontSize: 12, fontWeight: 700, backgroundColor: "#5ba300" }}
           aria-label="Melhor para acessibilidade"
         >
           <Award size={10} aria-hidden="true" />
@@ -242,7 +242,7 @@ function PlatformCard({ platform: p }: { platform: Platform }) {
           style={{ width: 40, height: 40, backgroundColor: p.color }}
           aria-hidden="true"
         >
-          <span className="text-white font-black" style={{ fontSize: 11 }}>
+          <span className="text-white font-black" style={{ fontSize: 13 }}>
             {p.name.slice(0, 2).toUpperCase()}
           </span>
         </div>

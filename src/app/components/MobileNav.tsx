@@ -27,16 +27,18 @@ export function MobileHeader({ onNavigate }: MobileHeaderProps) {
         className="af-focus flex items-center gap-2 rounded px-1"
         style={{ minHeight: 44 }}
       >
-        <svg width="26" height="26" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 40 40" fill="none" aria-hidden="true">
           <defs>
             <linearGradient id="mhLg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#0073e6" />
-              <stop offset="100%" stopColor="#005bb5" />
+              <stop offset="0%"   stopColor="#0073e6" />
+              <stop offset="55%"  stopColor="#5b3eb8" />
+              <stop offset="100%" stopColor="#b51963" />
             </linearGradient>
           </defs>
-          <rect width="36" height="36" rx="9" fill="url(#mhLg)" />
-          {/* Play triangle — centroid at (18.67, 18) */}
-          <path d="M13 9L13 27L30 18Z" fill="white" />
+          <rect width="40" height="40" rx="11" fill="url(#mhLg)" />
+          <rect x="0" y="0" width="40" height="20" rx="11" fill="rgba(255,255,255,0.12)" />
+          <path d="M16.5 12.5 L16.5 27.5 L29 20 Z" fill="white" />
+          <circle cx="31" cy="9" r="3" fill="#ffe27a" stroke="white" strokeWidth="1.2" />
         </svg>
         <span style={{ fontSize: 17, fontWeight: 800, color: "#1a1a2e", letterSpacing: "-0.02em" }}>
           Access<span style={{ color: "#0073e6" }}>Flix</span>
@@ -95,11 +97,11 @@ export function MobileBottomNav({ onNavigate, currentPage, dark = false }: Mobil
           >
             <Icon
               size={22}
-              color={active ? (dark ? "#4da3ff" : "#0073e6") : (dark ? "rgba(255,255,255,0.45)" : "#4a4a6a")}
+              color={active ? (dark ? "#4da3ff" : "#0073e6") : (dark ? "rgba(255,255,255,0.92)" : "#4a4a6a")}
               strokeWidth={active ? 2.2 : 1.8}
               aria-hidden="true"
             />
-            <span style={{ fontSize: 11, fontWeight: active ? 700 : 400, color: active ? (dark ? "#4da3ff" : "#0073e6") : (dark ? "rgba(255,255,255,0.45)" : "#4a4a6a"), lineHeight: 1 }}>
+            <span style={{ fontSize: 13, fontWeight: active ? 700 : 400, color: active ? (dark ? "#4da3ff" : "#0073e6") : (dark ? "rgba(255,255,255,0.92)" : "#4a4a6a"), lineHeight: 1 }}>
               {label}
             </span>
           </button>

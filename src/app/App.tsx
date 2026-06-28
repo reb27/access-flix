@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavBar } from "./components/NavBar";
 import { MobileHeader, MobileBottomNav } from "./components/MobileNav";
 import { MobileSearchPage } from "./components/MobileSearchPage";
@@ -7,6 +7,7 @@ import { HomePage } from "./components/HomePage";
 import { CategoryPage, type CategoryId } from "./components/CategoryPage";
 import { ListingPage } from "./components/ListingPage";
 import { DetailPage } from "./components/DetailPage";
+import type { ContentItem } from "./components/ContentCard";
 import { WatchPage } from "./components/WatchPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { SearchPage } from "./components/SearchPage";
@@ -52,11 +53,34 @@ export default function App() {
   const [fontSize, setFontSize] = useState<FontSize>("medium");
   const [fontSpacing, setFontSpacing] = useState<FontSpacing>("normal");
   const [highContrast, setHighContrast] = useState(false);
+  const [dyslexiaFont, setDyslexiaFont] = useState(false);
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [streamingOpen, setStreamingOpen] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
   const [selectedNeeds, setSelectedNeeds] = useState<string[]>([]);
+  const [contentPrefs, setContentPrefs] = useState<string[]>([]);
+  const [streamingPrefs, setStreamingPrefs] = useState<string[]>([]);
+
+  /* Selected film/game for the DetailPage */
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+
+  /* Mobile scroll container — reset to top on page change so DetailPage
+     doesn't open scrolled halfway down */
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
+
+  /* Open a content item: store it and navigate to detail */
+  const openDetail = (item?: ContentItem) => {
+    if (item) setSelectedItem(item);
+    setPage("detail");
+  };
+
+  /* Reset scroll when the page OR selected item changes — clicking a similar title
+     in DetailPage doesn't change `page`, only `selectedItem`. */
+  useEffect(() => {
+    if (mobileScrollRef.current) mobileScrollRef.current.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }, [page, selectedItem]);
 
   /* Lifted search state */
   const [searchActive, setSearchActive] = useState(false);
@@ -87,11 +111,13 @@ export default function App() {
     html.classList.add(`af-font-${fontSize}`);
     if (highContrast) html.classList.add("af-high-contrast");
     else              html.classList.remove("af-high-contrast");
+    if (dyslexiaFont) html.classList.add("af-dyslexia");
+    else              html.classList.remove("af-dyslexia");
     html.style.letterSpacing = letterSpacingMap[fontSpacing];
     return () => {
       html.style.letterSpacing = "";
     };
-  }, [fontSize, fontSpacing, highContrast]);
+  }, [fontSize, fontSpacing, highContrast, dyslexiaFont]);
 
   const handleDeactivateSearch = () => {
     setSearchActive(false);
@@ -104,7 +130,7 @@ export default function App() {
     else setProfileDrawerOpen(true);
   };
 
-  const handleCompleteProfile = (needs: string[]) => {
+  const handleCompleteProfile = (needs: string[], content: string[] = [], streaming: string[] = []) => {
     const visualIds = ["baixa_visao", "cegueira", "daltonismo"];
     const auditivaIds = ["surdez", "baixa_audicao", "libras"];
     const cognitivaIds = ["tdah", "autismo", "dislexia", "ansiedade", "def_intelectual"];
@@ -116,6 +142,8 @@ export default function App() {
       motora:    needs.some((n) => motoraIds.includes(n)),
     });
     setSelectedNeeds(needs);
+    setContentPrefs(content);
+    setStreamingPrefs(streaming);
     setHasProfile(true);
     setPage("home");
   };
@@ -126,7 +154,7 @@ export default function App() {
       <div className="af-app-root" style={{ letterSpacing: letterSpacingMap[fontSpacing] }}>
         <CreateProfilePage
           onBack={() => setPage("home")}
-          onComplete={(needs) => handleCompleteProfile(needs)}
+          onComplete={(needs, content, streaming) => handleCompleteProfile(needs, content, streaming)}
         />
       </div>
     );
@@ -154,12 +182,16 @@ export default function App() {
         )}
 
         {/* Content area — min-h-0 is required so flex-1 actually respects the parent's height and doesn't push the bottom nav off-screen */}
-        <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+        <div ref={mobileScrollRef} className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
           {page === "home" && (
             <HomePage
               onNavigate={setPage as any}
               disabilityProfile={disabilityProfile}
               hasProfile={hasProfile}
+              selectedNeeds={selectedNeeds}
+              contentPrefs={contentPrefs}
+              streamingPrefs={streamingPrefs}
+              onItemClick={openDetail}
               onShowStreaming={() => setStreamingOpen(true)}
             />
           )}
@@ -175,7 +207,7 @@ export default function App() {
             <CategoryPage
               categoryId={page.replace("category-", "") as CategoryId}
               onBack={() => setPage("home")}
-              onItemClick={() => setPage("detail")}
+              onItemClick={openDetail}
               onStreamingClick={() => setStreamingOpen(true)}
               onNavigateCategory={(c) => setPage(`category-${c}` as Page)}
             />
@@ -185,7 +217,8 @@ export default function App() {
             <ListingPage onNavigate={setPage as any} />
           )}
           {page === "detail" && (
-            <DetailPage
+            <DetailPage onSelectItem={openDetail}
+              item={selectedItem}
               onBack={() => setPage("home")}
               onWatch={() => setPage("watch")}
               hasProfile={hasProfile}
@@ -242,6 +275,8 @@ export default function App() {
         onLibrasToggle={() => setLibrasActive(!librasActive)}
         highContrast={highContrast}
         onContrastToggle={() => setHighContrast((v) => !v)}
+        dyslexiaFont={dyslexiaFont}
+        onDyslexiaToggle={() => setDyslexiaFont((v) => !v)}
         fontSize={fontSize}
         fontSpacing={fontSpacing}
         onFontSizeChange={setFontSize}
@@ -264,18 +299,18 @@ export default function App() {
         />
       ) : (
         <>
-          {page === "home" && <HomePage onNavigate={setPage as any} disabilityProfile={disabilityProfile} hasProfile={hasProfile} onShowStreaming={() => setStreamingOpen(true)} />}
+          {page === "home" && <HomePage onNavigate={setPage as any} disabilityProfile={disabilityProfile} hasProfile={hasProfile} selectedNeeds={selectedNeeds} contentPrefs={contentPrefs} streamingPrefs={streamingPrefs} onItemClick={openDetail} onShowStreaming={() => setStreamingOpen(true)} />}
           {page.startsWith("category-") && (
             <CategoryPage
               categoryId={page.replace("category-", "") as CategoryId}
               onBack={() => setPage("home")}
-              onItemClick={() => setPage("detail")}
+              onItemClick={openDetail}
               onStreamingClick={() => setStreamingOpen(true)}
               onNavigateCategory={(c) => setPage(`category-${c}` as Page)}
             />
           )}
           {page === "listing" && <ListingPage onNavigate={setPage as any} />}
-          {page === "detail" && <DetailPage onBack={() => setPage("listing")} onWatch={() => setPage("watch")} hasProfile={hasProfile} onShowOnboarding={() => setOnboardingOpen(true)} />}
+          {page === "detail" && <DetailPage item={selectedItem} onBack={() => setPage("home")} onWatch={() => setPage("watch")} onSelectItem={openDetail} hasProfile={hasProfile} onShowOnboarding={() => setOnboardingOpen(true)} />}
           {page === "watch" && <WatchPage onBack={() => setPage("detail")} />}
           {page === "profile" && (
             <ProfilePage

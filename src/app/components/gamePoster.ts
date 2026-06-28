@@ -1,4 +1,13 @@
 /**
+ * Returns a Steam library cover URL (600x900). Steam serves these publicly and
+ * they're the closest thing to a "real photo" cover for PC games.
+ * Pair with a fallback SVG (gamePoster) via onError.
+ */
+export function steamCover(appId: number): string {
+  return `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${appId}/library_600x900.jpg`;
+}
+
+/**
  * Generates an inline SVG poster (as data URI) for a game.
  * No network call — always loads. Stylized cover with gradient,
  * game title, studio and year.

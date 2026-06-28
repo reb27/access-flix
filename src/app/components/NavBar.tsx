@@ -12,6 +12,8 @@ interface NavBarProps {
   onLibrasToggle: () => void;
   highContrast: boolean;
   onContrastToggle: () => void;
+  dyslexiaFont: boolean;
+  onDyslexiaToggle: () => void;
   fontSize: FontSize;
   fontSpacing: FontSpacing;
   onFontSizeChange: (size: FontSize) => void;
@@ -31,32 +33,28 @@ interface NavBarProps {
 function AccessFlixLogo({ onClick }: { onClick: () => void }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="flex items-center gap-2.5 flex-shrink-0 focus:outline-none rounded-lg"
-      style={{ outline: "none", padding: "4px" }}
-      onFocus={(e) => (e.currentTarget.style.outline = "3px solid #0073e6")}
-      onBlur={(e) => (e.currentTarget.style.outline = "none")}
+      className="af-focus flex items-center gap-2.5 flex-shrink-0 rounded-lg"
+      style={{ padding: "4px" }}
       aria-label="AccessFlix — página inicial"
     >
-      {/*
-        Container 36×36, border-radius 9.
-        Triangle vertices: (13,9) (13,27) (30,18)
-        Centroid X = (13+13+30)/3 = 18.67 — 0.67px right of center (optical compensation).
-        Centroid Y = (9+27+18)/3 = 18 — exactly centered vertically.
-      */}
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
         <defs>
-          <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#0073e6" />
-            <stop offset="100%" stopColor="#005bb5" />
+          <linearGradient id="afLogoGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"   stopColor="#0073e6" />
+            <stop offset="55%"  stopColor="#5b3eb8" />
+            <stop offset="100%" stopColor="#b51963" />
           </linearGradient>
         </defs>
-        <rect width="36" height="36" rx="9" fill="url(#lg1)" />
-        {/* Play triangle — centroid at (18.67, 18), optically centered */}
-        <path d="M13 9L13 27L30 18Z" fill="white" />
-        {/* Accessibility arc */}
-        <path d="M24 7.5C28.5 9.5 31 13.5 31 18" stroke="white" strokeWidth="1.6" strokeLinecap="round" fill="none" strokeOpacity="0.6" />
-        <circle cx="30" cy="7" r="1.7" fill="white" fillOpacity="0.6" />
+        {/* Rounded square card */}
+        <rect width="40" height="40" rx="11" fill="url(#afLogoGrad)" />
+        {/* Inner glass highlight */}
+        <rect x="0" y="0" width="40" height="20" rx="11" fill="rgba(255,255,255,0.12)" />
+        {/* Centered play triangle — geometric centroid at (20, 20) */}
+        <path d="M16.5 12.5 L16.5 27.5 L29 20 Z" fill="white" />
+        {/* Accent dot (eye/spark) — top-right corner, fully detached */}
+        <circle cx="31" cy="9" r="3" fill="#ffe27a" stroke="white" strokeWidth="1.2" />
       </svg>
       <span
         style={{ fontSize: "21px", fontWeight: 800, color: "#1a1a2e", letterSpacing: "-0.02em", lineHeight: 1 }}
@@ -121,6 +119,8 @@ export function NavBar({
   onLibrasToggle,
   highContrast,
   onContrastToggle,
+  dyslexiaFont,
+  onDyslexiaToggle,
   fontSize,
   fontSpacing,
   onFontSizeChange,
@@ -253,6 +253,44 @@ export function NavBar({
                 ))}
               </div>
             </div>
+
+            {/* Dyslexia font toggle */}
+            <div className="mt-4 pt-4" style={{ borderTop: "1px solid #e8ecf0" }}>
+              <button
+                type="button"
+                onClick={onDyslexiaToggle}
+                aria-pressed={dyslexiaFont}
+                className="af-focus w-full flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors"
+                style={{
+                  backgroundColor: dyslexiaFont ? "#e6f2ff" : "white",
+                  border: `2px solid ${dyslexiaFont ? "#0073e6" : "#d0d5e0"}`,
+                  minHeight: 48,
+                }}
+              >
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-sm font-bold" style={{ color: dyslexiaFont ? "#0073e6" : "#1a1a2e" }}>
+                    📖 Modo dislexia
+                  </span>
+                  <span className="text-xs" style={{ color: "#4a4a6a" }}>
+                    Fonte Lexend + espaçamento amplo
+                  </span>
+                </div>
+                <span
+                  className="relative flex-shrink-0 rounded-full"
+                  style={{
+                    width: 40, height: 22,
+                    backgroundColor: dyslexiaFont ? "#0073e6" : "#d0d5e0",
+                    transition: "background-color 0.2s",
+                  }}
+                  aria-hidden="true"
+                >
+                  <span
+                    className="absolute top-[2px] rounded-full bg-white"
+                    style={{ width: 18, height: 18, left: dyslexiaFont ? 20 : 2, transition: "left 0.2s" }}
+                  />
+                </span>
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -307,10 +345,10 @@ export function NavBar({
                 minHeight: 44,
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5b5b7a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <span className="text-sm flex-1 truncate" style={{ color: "#9ca3af" }}>
+              <span className="text-sm flex-1 truncate" style={{ color: "#5b5b7a" }}>
                 <span className="hidden sm:inline">Buscar filmes e jogos acessíveis...</span>
                 <span className="sm:hidden">Buscar...</span>
               </span>
@@ -352,7 +390,7 @@ export function NavBar({
                     onFocus={(e) => { e.currentTarget.style.outline = "2px solid #0073e6"; }}
                     onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
                   >
-                    <X size={15} color="#9ca3af" />
+                    <X size={15} color="#5b5b7a" />
                   </button>
                 )}
               </div>
@@ -442,25 +480,6 @@ export function NavBar({
               );
             })}
 
-            {/* Filtros avançados */}
-            <button
-              className="flex items-center gap-1.5 flex-shrink-0 rounded-full border transition-all focus:outline-none ml-1"
-              style={{
-                padding: "7px 14px",
-                fontSize: 13,
-                fontWeight: 600,
-                backgroundColor: "#f8fafc",
-                borderColor: "#d0d5e0",
-                color: "#4a4a6a",
-                minHeight: 36,
-              }}
-              aria-label="Filtros avançados"
-              onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-              onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
-            >
-              <SlidersHorizontal size={14} aria-hidden="true" />
-              Filtros
-            </button>
           </div>
         </div>
       )}

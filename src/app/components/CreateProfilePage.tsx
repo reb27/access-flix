@@ -91,13 +91,13 @@ function StepBar({ step }: { step: 1 | 2 | 3 }) {
                 style={{
                   width: 28, height: 28,
                   backgroundColor: done ? "#5ba300" : current ? "#0073e6" : "#e8ecf0",
-                  color: done || current ? "white" : "#9ca3af",
+                  color: done || current ? "white" : "#5b5b7a",
                   transition: "all 0.3s ease",
                 }}
               >
                 {done ? <Check size={14} /> : num}
               </div>
-              <span className="text-center" style={{ fontSize: 10, fontWeight: current ? 700 : 400, color: current ? "#0073e6" : done ? "#5ba300" : "#9ca3af", whiteSpace: "nowrap" }}>
+              <span className="text-center" style={{ fontSize: 12, fontWeight: current ? 700 : 400, color: current ? "#0073e6" : done ? "#5ba300" : "#5b5b7a", whiteSpace: "nowrap" }}>
                 {label}
               </span>
             </div>
@@ -154,7 +154,7 @@ function NeedCardBtn({ id, label, groupColor, groupBg, selected, onToggle }: {
       >
         {icon}
       </div>
-      <span className="text-center leading-tight" style={{ fontSize: 11, fontWeight: 700, color: selected ? groupColor : "#2d2d44", maxWidth: 80 }}>
+      <span className="text-center leading-tight" style={{ fontSize: 13, fontWeight: 700, color: selected ? groupColor : "#2d2d44", maxWidth: 80 }}>
         {label}
       </span>
     </button>
@@ -163,9 +163,10 @@ function NeedCardBtn({ id, label, groupColor, groupBg, selected, onToggle }: {
 
 /* ── Preferences step ── */
 const CONTENT_PREFS = [
-  { id: "filmes", label: "Filmes", emoji: "🎬" },
-  { id: "series", label: "Séries", emoji: "📺" },
-  { id: "jogos",  label: "Jogos",  emoji: "🎮" },
+  { id: "filmes", label: "Filmes",        emoji: "🎬" },
+  { id: "series", label: "Séries",        emoji: "📺" },
+  { id: "anime",  label: "Animes",        emoji: "🎌" },
+  { id: "jogos",  label: "Jogos",         emoji: "🎮" },
   { id: "docs",   label: "Documentários", emoji: "🎞️" },
 ];
 
@@ -180,7 +181,7 @@ const STREAMING_PREFS = [
 /* ── Main page ── */
 interface CreateProfilePageProps {
   onBack: () => void;
-  onComplete: (needs: NeedId[]) => void;
+  onComplete: (needs: NeedId[], contentPrefs: string[], streamingPrefs: string[]) => void;
 }
 
 export function CreateProfilePage({ onBack, onComplete }: CreateProfilePageProps) {
@@ -214,7 +215,11 @@ export function CreateProfilePage({ onBack, onComplete }: CreateProfilePageProps
   };
 
   const handleFinish = () => {
-    onComplete(Array.from(selectedNeeds));
+    onComplete(
+      Array.from(selectedNeeds),
+      Array.from(contentPrefs),
+      Array.from(streamingPrefs),
+    );
   };
 
   return (

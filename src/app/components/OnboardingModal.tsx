@@ -1,50 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { X, Eye, Ear, Brain, Hand, Check } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { X, Sparkles, Volume2, Captions, Hand, BookOpen } from "lucide-react";
 
 interface OnboardingModalProps {
   onClose: () => void;
-  onCreateProfile: (selected: string[]) => void;
-  /** Navigate to the full profile creation flow instead of inline selection */
+  /* Kept for compatibility with existing callers; we always use onGoToCreateProfile now */
+  onCreateProfile?: (selected: string[]) => void;
   onGoToCreateProfile?: () => void;
 }
 
-const categories = [
-  {
-    id: "visual",
-    icon: Eye,
-    label: "Visual",
-    description: "Audiodescrição, alto contraste",
-    accentColor: "#e6308a",
-    bgColor: "#fce4f0",
-  },
-  {
-    id: "auditiva",
-    icon: Ear,
-    label: "Auditiva",
-    description: "Legendas, Libras",
-    accentColor: "#0073e6",
-    bgColor: "#e6f2ff",
-  },
-  {
-    id: "cognitiva",
-    icon: Brain,
-    label: "Cognitiva",
-    description: "Linguagem simplificada",
-    accentColor: "#5ba300",
-    bgColor: "#edf7e0",
-  },
-  {
-    id: "motora",
-    icon: Hand,
-    label: "Motora",
-    description: "Controles adaptativos",
-    accentColor: "#f5a623",
-    bgColor: "#fff4e0",
-  },
-];
-
-export function OnboardingModal({ onClose, onCreateProfile, onGoToCreateProfile }: OnboardingModalProps) {
-  const [selected, setSelected] = useState<string[]>([]);
+export function OnboardingModal({ onClose, onGoToCreateProfile }: OnboardingModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -74,12 +38,6 @@ export function OnboardingModal({ onClose, onCreateProfile, onGoToCreateProfile 
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
-
-  const toggle = (id: string) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
 
   return (
     <div
@@ -115,126 +73,73 @@ export function OnboardingModal({ onClose, onCreateProfile, onGoToCreateProfile 
           <X size={20} color="#4a4a6a" aria-hidden="true" />
         </button>
 
-        {/* Icon — single UserCircle, perfectly centered, no transforms */}
+        {/* Welcome glyph — friendly waving hand on a soft circle */}
         <div className="flex justify-center mb-6" aria-hidden="true">
           <div
             style={{
-              width: 80,
-              height: 80,
+              width: 88,
+              height: 88,
               borderRadius: "50%",
-              backgroundColor: "#e8f0fe",
+              background: "linear-gradient(135deg, #0073e6 0%, #5b3eb8 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
+              boxShadow: "0 12px 28px rgba(0,115,230,0.25)",
+              fontSize: 44,
+              lineHeight: 1,
             }}
           >
-            {/* ti-user-circle equivalent: outer ring + head circle + body arc */}
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#0073e6"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <circle cx="12" cy="10" r="3" />
-              <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
-            </svg>
+            👋
           </div>
         </div>
 
         {/* Title */}
         <h2
           id="onboarding-title"
-          className="text-center mb-2"
-          style={{ fontSize: 22, fontWeight: 700, color: "#1a1a2e", lineHeight: 1.3 }}
+          className="text-center mb-3"
+          style={{ fontSize: 24, fontWeight: 800, color: "#1a1a2e", lineHeight: 1.2 }}
         >
-          Experiência personalizada para você
+          Bem-vindo ao AccessFlix
         </h2>
-        <p className="text-center mb-8" style={{ fontSize: 15, color: "#4a4a6a", lineHeight: 1.5 }}>
-          Crie seu perfil e receba recomendações adaptadas às suas necessidades.
+        <p className="text-center mb-6" style={{ fontSize: 15, color: "#4a4a6a", lineHeight: 1.5 }}>
+          Hub de filmes, séries, animes, jogos e documentários com recursos de acessibilidade.
+          Crie seu perfil em 3 passos rápidos e receba conteúdo adaptado a você.
         </p>
 
-        {/* 2×2 grid of categories */}
-        <div className="grid grid-cols-2 gap-3 mb-8">
-          {categories.map((cat) => {
-            const Icon = cat.icon;
-            const isSelected = selected.includes(cat.id);
-            return (
-              <button
-                key={cat.id}
-                onClick={() => toggle(cat.id)}
-                aria-pressed={isSelected}
-                aria-label={`Selecionar acessibilidade ${cat.label}${isSelected ? ", selecionado" : ""}`}
-                className="relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all focus:outline-none"
-                style={{
-                  backgroundColor: isSelected ? cat.bgColor : "#fafafa",
-                  borderColor: isSelected ? cat.accentColor : "#e2e8f0",
-                  boxShadow: isSelected ? `0 4px 12px ${cat.accentColor}33` : "none",
-                  minHeight: 44,
-                }}
-                onFocus={(e) => { e.currentTarget.style.outline = `3px solid ${cat.accentColor}`; e.currentTarget.style.outlineOffset = "2px"; }}
-                onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
-              >
-                {isSelected && (
-                  <div
-                    className="absolute top-2 right-2 rounded-full flex items-center justify-center"
-                    style={{ width: 20, height: 20, backgroundColor: cat.accentColor }}
-                    aria-hidden="true"
-                  >
-                    <Check size={12} color="white" />
-                  </div>
-                )}
-                <div
-                  className="rounded-xl flex items-center justify-center"
-                  style={{
-                    width: 48, height: 48,
-                    backgroundColor: isSelected ? cat.accentColor : "#f0f0f8",
-                  }}
-                  aria-hidden="true"
-                >
-                  <Icon size={24} color={isSelected ? "white" : cat.accentColor} />
-                </div>
-                <span className="text-sm font-semibold" style={{ color: isSelected ? cat.accentColor : "#1a1a2e" }}>
-                  {cat.label}
-                </span>
-                <span className="text-xs text-center leading-tight" style={{ color: "#4a4a6a" }}>
-                  {cat.description}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {/* What we deliver */}
+        <ul className="flex flex-col gap-2 mb-6">
+          {[
+            { Icon: Volume2,  text: "Audiodescrição em PT-BR" },
+            { Icon: Captions, text: "Legendas descritivas e closed caption" },
+            { Icon: Hand,     text: "Janela de intérprete de Libras" },
+            { Icon: BookOpen, text: "Linguagem simplificada e modo dislexia" },
+          ].map(({ Icon, text }, i) => (
+            <li key={i} className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ backgroundColor: "#f5f7fa" }}>
+              <span className="flex items-center justify-center rounded-lg flex-shrink-0" style={{ width: 32, height: 32, backgroundColor: "#e6f2ff", color: "#0073e6" }} aria-hidden="true">
+                <Icon size={18} />
+              </span>
+              <span className="text-sm" style={{ color: "#1a1a2e" }}>{text}</span>
+            </li>
+          ))}
+        </ul>
 
-        {/* Primary CTA — navigates to full CreateProfile page */}
+        {/* Primary CTA — single action, no redundancy */}
         <button
-          onClick={() => onGoToCreateProfile ? onGoToCreateProfile() : onCreateProfile(selected)}
-          className="w-full rounded-xl font-semibold text-white mb-3 transition-all active:scale-[0.98] focus:outline-none focus:ring-2"
-          style={{
-            backgroundColor: "#0073e6",
-            padding: "14px 24px",
-            fontSize: 16,
-            ["--tw-ring-color" as string]: "#0073e6",
-          }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = "#005bb5")}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = "#0073e6")}
-          onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-          onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
+          type="button"
+          onClick={() => onGoToCreateProfile?.()}
+          className="af-focus w-full rounded-xl font-bold text-white mb-3 transition-transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+          style={{ backgroundColor: "#0073e6", padding: "14px 24px", fontSize: 16, minHeight: 48 }}
         >
+          <Sparkles size={18} aria-hidden="true" />
           Criar meu perfil
         </button>
 
-        {/* Secondary */}
         <button
+          type="button"
           onClick={onClose}
-          className="w-full text-center underline focus:outline-none focus:ring-2 rounded py-2"
-          style={{ color: "#4a4a6a", fontSize: 14, ["--tw-ring-color" as string]: "#0073e6" }}
-          onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-          onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
+          className="af-focus w-full text-center rounded py-2"
+          style={{ color: "#4a4a6a", fontSize: 14, minHeight: 44, textDecoration: "underline" }}
         >
           Continuar sem perfil
         </button>

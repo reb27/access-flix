@@ -1,5 +1,6 @@
 import { Gamepad2, Eye, Ear, Brain, Hand } from "lucide-react";
-import { gamePoster } from "./gamePoster";
+import { useState } from "react";
+import { gamePoster, steamCover } from "./gamePoster";
 
 /**
  * Jogos com excelente acessibilidade — curadoria 2024-2025.
@@ -23,8 +24,26 @@ export type GameRank = {
   V: number; A: number; C: number; M: number;
   highlight: string;
   poster: string;
+  fallbackPoster?: string;
   posterColor: string;
 };
+
+/* Image with cascading fallback: src → fallback → hide. */
+function GamePic({ src, fallback, alt, style }: { src: string; fallback?: string; alt: string; style?: React.CSSProperties }) {
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+  if (step === 2) return null;
+  const current = step === 0 ? src : (fallback ?? "");
+  if (!current) return null;
+  return (
+    <img
+      src={current}
+      alt={alt}
+      style={{ width: "100%", height: "100%", objectFit: "cover", ...style }}
+      loading="lazy"
+      onError={() => setStep((s) => (s + 1) as 0 | 1 | 2)}
+    />
+  );
+}
 
 export const GAME_RANKING: GameRank[] = [
   {
@@ -37,7 +56,8 @@ export const GAME_RANKING: GameRank[] = [
     V: 10, A: 9, C: 9, M: 10,
     highlight: "60+ opções de acessibilidade. Marco zero da indústria — vencedor do prêmio Innovation in Accessibility (Game Awards 2020).",
     posterColor: "#1a3a52",
-    poster: gamePoster({ title: "The Last of Us II", studio: "Naughty Dog", year: 2020, colors: ["#1a3a52","#0c1f2e"], glyph: "🍂" }),
+    poster: steamCover(2531310),
+    fallbackPoster: gamePoster({ title: "The Last of Us II", studio: "Naughty Dog", year: 2020, colors: ["#1a3a52","#0c1f2e"], glyph: "🍂" }),
   },
   {
     id: "forza5",
@@ -49,7 +69,8 @@ export const GAME_RANKING: GameRank[] = [
     V: 9, A: 10, C: 9, M: 10,
     highlight: "Primeira a oferecer interpretação em ASL/BSL nas cutscenes; cones de TTS, magic wheel para motora.",
     posterColor: "#b35d00",
-    poster: gamePoster({ title: "Forza Horizon 5", studio: "Playground", year: 2021, colors: ["#f59e0b","#7a3c0a"], glyph: "🏁" }),
+    poster: steamCover(1551360),
+    fallbackPoster: gamePoster({ title: "Forza Horizon 5", studio: "Playground", year: 2021, colors: ["#f59e0b","#7a3c0a"], glyph: "🏁" }),
   },
   {
     id: "gow",
@@ -61,7 +82,8 @@ export const GAME_RANKING: GameRank[] = [
     V: 9, A: 9, C: 10, M: 9,
     highlight: "70+ recursos: descrição de áudio, lock-on auto, contraste alto, dicas persistentes.",
     posterColor: "#2a1a3a",
-    poster: gamePoster({ title: "God of War Ragnarök", studio: "Santa Monica", year: 2022, colors: ["#5a3d8c","#1e1538"], glyph: "⚔" }),
+    poster: steamCover(2322010),
+    fallbackPoster: gamePoster({ title: "God of War Ragnarök", studio: "Santa Monica", year: 2022, colors: ["#5a3d8c","#1e1538"], glyph: "⚔" }),
   },
   {
     id: "spiderman2",
@@ -85,7 +107,8 @@ export const GAME_RANKING: GameRank[] = [
     V: 9, A: 10, C: 8, M: 9,
     highlight: "Pulso visual no ritmo da música — surdos podem jogar pelo som apenas com indicadores visuais.",
     posterColor: "#ec4899",
-    poster: gamePoster({ title: "Hi-Fi Rush", studio: "Tango Gameworks", year: 2023, colors: ["#ec4899","#7c2d12"], glyph: "🎸" }),
+    poster: steamCover(1817230),
+    fallbackPoster: gamePoster({ title: "Hi-Fi Rush", studio: "Tango Gameworks", year: 2023, colors: ["#ec4899","#7c2d12"], glyph: "🎸" }),
   },
   {
     id: "celeste",
@@ -97,7 +120,8 @@ export const GAME_RANKING: GameRank[] = [
     V: 8, A: 8, C: 9, M: 10,
     highlight: "Assist Mode pioneiro: invencibilidade, slow-mo, infinite dash. Modelo de design inclusivo.",
     posterColor: "#5a3d8c",
-    poster: gamePoster({ title: "Celeste", studio: "Maddy Makes Games", year: 2018, colors: ["#a855f7","#1e1b4b"], glyph: "⛰" }),
+    poster: steamCover(504230),
+    fallbackPoster: gamePoster({ title: "Celeste", studio: "Maddy Makes Games", year: 2018, colors: ["#a855f7","#1e1b4b"], glyph: "⛰" }),
   },
 ];
 
@@ -125,22 +149,41 @@ export function GameRanking() {
         color: "white",
       }}
     >
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex items-start gap-3 mb-6">
         <span
           className="flex items-center justify-center rounded-2xl flex-shrink-0"
-          style={{ width: 44, height: 44, background: "linear-gradient(135deg,#ff4dba,#7c3aed)" }}
+          style={{ width: 52, height: 52, background: "linear-gradient(135deg,#ff4dba,#7c3aed)", boxShadow: "0 8px 24px rgba(124,58,237,0.4)" }}
           aria-hidden="true"
         >
-          <Gamepad2 size={24} color="white" />
+          <Gamepad2 size={28} color="white" />
         </span>
-        <div>
-          <h2 id="game-ranking-title" className="font-bold leading-tight" style={{ fontSize: "clamp(17px, 2.4vw, 22px)" }}>
+        <div className="flex-1 min-w-0">
+          <h2 id="game-ranking-title" className="font-bold leading-tight mb-1" style={{ fontSize: "clamp(18px, 2.8vw, 26px)" }}>
             🎮 Top jogos acessíveis
           </h2>
-          <p className="text-xs md:text-sm" style={{ color: "rgba(255,255,255,0.92)" }}>
-            Os melhores em acessibilidade — fontes: CanIPlayThat, AbleGamers, Game Accessibility Awards
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.95)" }}>
+            Os marcos da indústria em acessibilidade — curado de CanIPlayThat, AbleGamers e Game Accessibility Awards
           </p>
         </div>
+      </div>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: "Jogos analisados", value: "60+", accent: "#ffe27a" },
+          { label: "Recursos no TLOU2", value: "60+", accent: "#ff4dba" },
+          { label: "Estúdios líderes",  value: "12",  accent: "#a855f7" },
+          { label: "Padrão WCAG",       value: "AA+", accent: "#22c55e" },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="rounded-2xl p-3"
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+          >
+            <div className="font-black leading-none mb-1" style={{ fontSize: 26, color: s.accent }}>{s.value}</div>
+            <div className="text-sm" style={{ color: "rgba(255,255,255,0.92)" }}>{s.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Top 3 podium */}
@@ -161,15 +204,9 @@ export function GameRanking() {
               <div className="flex items-start gap-3">
                 <div
                   className="rounded-xl overflow-hidden flex-shrink-0"
-                  style={{ width: 60, height: 90, backgroundColor: g.posterColor }}
+                  style={{ width: 76, height: 114, backgroundColor: g.posterColor, boxShadow: "0 6px 16px rgba(0,0,0,0.35)" }}
                 >
-                  <img
-                    src={g.poster}
-                    alt=""
-                    aria-hidden="true"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    loading="lazy"
-                  />
+                  <GamePic src={g.poster} fallback={g.fallbackPoster} alt={`Pôster de ${g.title}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-1">
@@ -210,6 +247,37 @@ export function GameRanking() {
         })}
       </div>
 
+      {/* Recursos que mudaram tudo */}
+      <div className="mb-5">
+        <h3 className="font-bold mb-3" style={{ fontSize: 16, color: "white" }}>
+          🌟 Recursos que mudaram a indústria
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {[
+            { emoji: "🎯", title: "Assist Mode (Celeste, 2018)",      desc: "Modo configurável: invencibilidade, slow-mo, infinite dash. Inspirou toda a indústria." },
+            { emoji: "🎮", title: "Xbox Adaptive Controller (2018)",  desc: "Controle modular pra motora fina, criado em parceria com hospitais e PCD." },
+            { emoji: "🔊", title: "Sinais sonoros 3D (TLOU2, 2020)",   desc: "Permite cegos completarem o jogo inteiro só pelo áudio." },
+            { emoji: "🤟", title: "ASL/BSL em cutscenes (Forza H5)",   desc: "Primeira a oferecer intérprete em vídeo nas cenas do jogo." },
+          ].map((r) => (
+            <div
+              key={r.title}
+              className="rounded-xl p-3 flex gap-3"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+            >
+              <span className="flex-shrink-0" style={{ fontSize: 26, lineHeight: 1 }} aria-hidden="true">{r.emoji}</span>
+              <div className="min-w-0">
+                <div className="font-bold leading-tight mb-1" style={{ fontSize: 14, color: "white" }}>{r.title}</div>
+                <div className="text-sm leading-snug" style={{ color: "rgba(255,255,255,0.95)" }}>{r.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <h3 className="font-bold mb-3" style={{ fontSize: 16, color: "white" }}>
+        Outros destaques
+      </h3>
+
       {/* Rest list */}
       <ol className="flex flex-col gap-2">
         {rest.map((g, i) => (
@@ -227,16 +295,9 @@ export function GameRanking() {
             </span>
             <div
               className="rounded-lg overflow-hidden flex-shrink-0"
-              style={{ width: 44, height: 60, backgroundColor: g.posterColor }}
+              style={{ width: 50, height: 75, backgroundColor: g.posterColor }}
             >
-              <img
-                src={g.poster}
-                alt=""
-                aria-hidden="true"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                loading="lazy"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-              />
+              <GamePic src={g.poster} fallback={g.fallbackPoster} alt={`Pôster de ${g.title}`} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2 flex-wrap">

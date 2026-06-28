@@ -128,7 +128,7 @@ const CATEGORIES: Record<CategoryId, CategoryConfig> = {
 interface CategoryPageProps {
   categoryId: CategoryId;
   onBack: () => void;
-  onItemClick: () => void;
+  onItemClick: (item: ContentItem) => void;
   onStreamingClick?: () => void;
   onNavigateCategory: (cat: CategoryId) => void;
 }
@@ -248,7 +248,7 @@ export function CategoryPage({ categoryId, onBack, onItemClick, onStreamingClick
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
               {films.map((c) => (
-                <ContentCard key={c.id} item={c} onClick={onItemClick} onStreamingClick={onStreamingClick} />
+                <ContentCard key={c.id} item={c} onClick={() => onItemClick(c)} onStreamingClick={onStreamingClick} />
               ))}
             </div>
           </section>
@@ -262,7 +262,7 @@ export function CategoryPage({ categoryId, onBack, onItemClick, onStreamingClick
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
               {games.map((c) => (
-                <ContentCard key={c.id} item={c} onClick={onItemClick} onStreamingClick={onStreamingClick} />
+                <ContentCard key={c.id} item={c} onClick={() => onItemClick(c)} onStreamingClick={onStreamingClick} />
               ))}
             </div>
           </section>

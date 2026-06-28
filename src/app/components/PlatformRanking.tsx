@@ -114,8 +114,37 @@ function CoverageBadge({ kind, label }: { kind: PlatformRank["ad"]; label: strin
   );
 }
 
-export function PlatformRanking() {
-  const top = PLATFORM_RANKING[0];
+const medals = ["🥇", "🥈", "🥉"];
+
+const coverageScore: Record<PlatformRank["ad"], number> = {
+  amplo: 3, parcial: 2, limitado: 1, "não": 0,
+};
+
+interface PlatformRankingProps {
+  /** Weights based on user's accessibility needs — reorders the ranking */
+  needsBadges?: ("AD" | "Leg" | "Libras" | "Adapt")[];
+}
+
+export function PlatformRanking({ needsBadges = [] }: PlatformRankingProps) {
+  /* If the user has profile needs, re-rank based on what they actually need */
+  const ranked = (() => {
+    if (needsBadges.length === 0) return PLATFORM_RANKING;
+    const wantsAD = needsBadges.includes("AD");
+    const wantsLeg = needsBadges.includes("Leg");
+    const wantsLibras = needsBadges.includes("Libras");
+
+    return [...PLATFORM_RANKING].sort((a, b) => {
+      const sa = (wantsAD ? coverageScore[a.ad] : 0)
+               + (wantsLeg ? coverageScore[a.leg] : 0)
+               + (wantsLibras ? coverageScore[a.libras] * 2 : 0); /* Libras é raro, peso 2 */
+      const sb = (wantsAD ? coverageScore[b.ad] : 0)
+               + (wantsLeg ? coverageScore[b.leg] : 0)
+               + (wantsLibras ? coverageScore[b.libras] * 2 : 0);
+      return sb - sa || b.score - a.score;
+    });
+  })();
+
+  const isPersonalized = needsBadges.length > 0;
 
   return (
     <section
@@ -126,100 +155,76 @@ export function PlatformRanking() {
         border: "1px solid rgba(0,0,0,0.05)",
       }}
     >
-      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
-        <div className="flex items-center gap-3 min-w-0">
-          <span
-            className="flex items-center justify-center rounded-2xl flex-shrink-0"
-            style={{ width: 44, height: 44, background: "linear-gradient(135deg,#f5a623,#b35d00)", color: "white" }}
-            aria-hidden="true"
-          >
-            <Award size={24} />
-          </span>
-          <div className="min-w-0">
-            <h2 id="platform-ranking-title" className="font-bold leading-tight" style={{ fontSize: "clamp(17px, 2.4vw, 22px)", color: "#1a1a2e" }}>
-              🏆 Ranking de plataformas
-            </h2>
-            <p className="text-xs md:text-sm" style={{ color: "#4a4a6a" }}>
-              Acessibilidade no streaming brasileiro — atualizado em 2025
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Champion card */}
-      <div
-        className="rounded-2xl p-5 mb-4 flex flex-col md:flex-row md:items-center gap-4"
-        style={{
-          background: `linear-gradient(135deg, ${top.color}15, ${top.color}05)`,
-          border: `2px solid ${top.color}`,
-        }}
-      >
-        <BrandMark name={top.name} color={top.color} size={72} />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-black px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: "#2f5a00" }}>
-              🥇 #1
-            </span>
-            <h3 className="font-bold" style={{ color: "#1a1a2e", fontSize: 18 }}>{top.name}</h3>
-            <span className="text-lg font-black" style={{ color: top.color }}>{top.score.toFixed(1)}</span>
-          </div>
-          <p className="text-sm" style={{ color: "#4a4a6a" }}>{top.highlight}</p>
-        </div>
-        <a
-          href={top.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="af-focus inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-white text-sm font-bold flex-shrink-0"
-          style={{ backgroundColor: top.color, minHeight: 44 }}
-          aria-label={`Abrir ${top.name} em nova aba`}
+      <div className="flex items-center gap-3 mb-5">
+        <span
+          className="flex items-center justify-center rounded-2xl flex-shrink-0"
+          style={{ width: 44, height: 44, background: "linear-gradient(135deg,#f5a623,#b35d00)", color: "white" }}
+          aria-hidden="true"
         >
-          Visitar <ExternalLink size={14} aria-hidden="true" />
-        </a>
+          <Award size={24} />
+        </span>
+        <div className="min-w-0">
+          <h2 id="platform-ranking-title" className="font-bold leading-tight" style={{ fontSize: "clamp(17px, 2.4vw, 22px)", color: "#1a1a2e" }}>
+            🏆 {isPersonalized ? "Melhores plataformas pra você" : "Onde assistir com acessibilidade"}
+          </h2>
+          <p className="text-xs md:text-sm" style={{ color: "#4a4a6a" }}>
+            {isPersonalized
+              ? `Reordenado por ${needsBadges.join(" + ")} — quem entrega mais aparece primeiro`
+              : "Ranking das plataformas no Brasil em 2025"}
+          </p>
+        </div>
       </div>
 
-      {/* Rest of ranking */}
-      <ol className="flex flex-col gap-2" aria-label="Demais plataformas">
-        {PLATFORM_RANKING.slice(1).map((p, i) => (
-          <li
+      {/* Visual grid — 2 cols mobile, 3 cols desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {ranked.map((p, i) => (
+          <a
             key={p.id}
-            className="rounded-2xl p-4 flex items-center gap-3 bg-white"
-            style={{ border: "1px solid #e8ecf0" }}
+            href={p.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="af-focus relative rounded-2xl p-4 flex flex-col gap-2.5 transition-transform hover:scale-[1.02] bg-white"
+            style={{
+              border: i < 3 ? `2px solid ${p.color}` : "1px solid #e8ecf0",
+              boxShadow: i === 0 ? `0 6px 18px ${p.color}33` : "0 2px 8px rgba(0,0,0,0.04)",
+            }}
+            aria-label={`${p.name}, posição ${i + 1}, score ${p.score.toFixed(1)}`}
           >
-            <span
-              className="font-black text-base flex-shrink-0 flex items-center justify-center rounded-xl"
-              style={{ width: 36, height: 36, color: "#4a4a6a", backgroundColor: "#f5f7fa" }}
-              aria-label={`Posição ${i + 2}`}
-            >
-              {i + 2}
-            </span>
-            <BrandMark name={p.name} color={p.color} size={44} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm" style={{ color: "#1a1a2e" }}>{p.name}</span>
-                <span className="text-sm font-bold" style={{ color: p.color }}>{p.score.toFixed(1)}</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                <CoverageBadge kind={p.ad}     label="AD" />
-                <CoverageBadge kind={p.leg}    label="Leg" />
-                <CoverageBadge kind={p.libras} label="Libras" />
-              </div>
-              <p className="text-xs mt-1.5 hidden sm:block" style={{ color: "#4a4a6a" }}>{p.highlight}</p>
+            {/* Medal/position pill */}
+            <div className="flex items-center justify-between">
+              <span
+                className="inline-flex items-center gap-1 text-xs font-black px-2 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: i < 3 ? p.color : "#f5f7fa",
+                  color: i < 3 ? "white" : "#4a4a6a",
+                }}
+              >
+                {i < 3 ? <>{medals[i]} #{i + 1}</> : <>#{i + 1}</>}
+              </span>
+              <ExternalLink size={14} color="#5b5b7a" aria-hidden="true" />
             </div>
-            <a
-              href={p.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="af-focus af-icon-btn flex-shrink-0"
-              aria-label={`Abrir ${p.name} em nova aba`}
-            >
-              <ExternalLink size={16} aria-hidden="true" />
-            </a>
-          </li>
+
+            {/* Brand mark */}
+            <div className="flex items-center gap-3">
+              <BrandMark name={p.name} color={p.color} size={48} />
+              <div className="min-w-0 flex-1">
+                <div className="font-bold leading-tight truncate" style={{ color: "#1a1a2e", fontSize: 14 }}>{p.name}</div>
+                <div className="text-xs font-black" style={{ color: p.color }}>{p.score.toFixed(1)} <span className="text-xs font-medium" style={{ color: "#4a4a6a" }}>/10</span></div>
+              </div>
+            </div>
+
+            {/* Coverage badges */}
+            <div className="flex flex-wrap gap-1">
+              <CoverageBadge kind={p.ad}     label="AD" />
+              <CoverageBadge kind={p.leg}    label="Leg" />
+              <CoverageBadge kind={p.libras} label="Libras" />
+            </div>
+          </a>
         ))}
-      </ol>
+      </div>
 
       <p className="text-xs mt-4" style={{ color: "#4a4a6a" }}>
-        💡 Score editorial baseado em cobertura de AD, legendas PT-BR/SDH e janela de Libras nas plataformas no Brasil.
+        💡 Score editorial considerando cobertura de Audiodescrição, Legendas PT-BR/SDH e janela de Libras.
       </p>
     </section>
   );

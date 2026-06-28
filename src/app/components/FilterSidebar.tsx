@@ -235,7 +235,7 @@ export function FilterSidebar({ onApply }: FilterSidebarProps) {
                         style={{
                           width: 18, height: 18,
                           backgroundColor: group.accentColor,
-                          fontSize: 10, fontWeight: 700,
+                          fontSize: 12, fontWeight: 700,
                         }}
                         aria-label={`${groupCheckedCount} selecionado${groupCheckedCount > 1 ? "s" : ""}`}
                       >
@@ -244,7 +244,7 @@ export function FilterSidebar({ onApply }: FilterSidebarProps) {
                     )}
                     <svg
                       width="14" height="14" viewBox="0 0 24 24" fill="none"
-                      stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      stroke="#5b5b7a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                       style={{ transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
                       aria-hidden="true"
                     >

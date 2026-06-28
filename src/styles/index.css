@@ -10,6 +10,23 @@ html, body, button, input, textarea, select {
   font-family: 'Atkinson Hyperlegible', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
+/* Dyslexia mode — switches to Lexend (designed for reading proficiency) with wider spacing */
+html.af-dyslexia,
+html.af-dyslexia body,
+html.af-dyslexia button,
+html.af-dyslexia input,
+html.af-dyslexia textarea,
+html.af-dyslexia select {
+  font-family: 'Lexend', 'Comic Sans MS', system-ui, sans-serif !important;
+  letter-spacing: 0.03em !important;
+  word-spacing: 0.16em !important;
+  line-height: 1.6 !important;
+}
+
+/* Bump Tailwind's tiny utilities to readable minimums. text-xs goes from 12 → 13. */
+.text-xs { font-size: 13px !important; line-height: 1.4 !important; }
+.text-sm { font-size: 14.5px !important; }
+
 /* ============================================================
    GLOBAL ACCESSIBILITY: font scale + high-contrast mode
    ============================================================ */
@@ -87,7 +104,7 @@ html.af-high-contrast :focus-visible {
   transition: transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
 }
 .af-category-card:hover {
-  transform: translateY(-3px) rotate(-0.5deg);
+  transform: translateY(-3px);
 }
 .af-category-card:active {
   transform: translateY(-1px) scale(0.98);

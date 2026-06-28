@@ -265,7 +265,7 @@ export function SearchPage({ query, activeChip, onSuggestionClick }: SearchPageP
                   aria-label={`Buscar por ${s.label}`}
                 >
                   <span className="flex-shrink-0" aria-hidden="true">
-                    {s.type === "recent" ? <Clock size={16} color="#9ca3af" /> : <Search size={16} color="#9ca3af" />}
+                    {s.type === "recent" ? <Clock size={16} color="#5b5b7a" /> : <Search size={16} color="#5b5b7a" />}
                   </span>
                   <span className="flex-1 text-sm" style={{ color: "#4a4a6a" }}>{s.label}</span>
                   {s.badges.length > 0 && (
@@ -314,7 +314,7 @@ export function SearchPage({ query, activeChip, onSuggestionClick }: SearchPageP
                   <SlidersHorizontal size={14} aria-hidden="true" />
                   Filtros avançados
                   {activeFilterCount > 0 && (
-                    <span className="flex items-center justify-center rounded-full text-white" style={{ width: 18, height: 18, backgroundColor: "#e6308a", fontSize: 10, fontWeight: 700 }} aria-hidden="true">
+                    <span className="flex items-center justify-center rounded-full text-white" style={{ width: 18, height: 18, backgroundColor: "#e6308a", fontSize: 12, fontWeight: 700 }} aria-hidden="true">
                       {activeFilterCount}
                     </span>
                   )}

@@ -7,10 +7,16 @@ interface VLibrasPanelProps {
 
 export function VLibrasPanel({ onClose }: VLibrasPanelProps) {
   const [expanded, setExpanded] = useState(true);
-  const [position, setPosition] = useState(() => ({
-    x: typeof window !== "undefined" ? Math.min(window.innerWidth - 320, window.innerWidth - 48) : 20,
-    y: typeof window !== "undefined" ? window.innerHeight - 420 : 100,
-  }));
+  const [position, setPosition] = useState(() => {
+    if (typeof window === "undefined") return { x: 20, y: 100 };
+    /* Center vertically, anchored to right edge with 24px margin so the panel is fully visible */
+    const panelWidth = Math.min(320, window.innerWidth - 32);
+    const panelHeight = 400;
+    return {
+      x: Math.max(16, window.innerWidth - panelWidth - 24),
+      y: Math.max(16, (window.innerHeight - panelHeight) / 2),
+    };
+  });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [visible, setVisible] = useState(true);
@@ -134,7 +140,7 @@ export function VLibrasPanel({ onClose }: VLibrasPanelProps) {
             {/* VLibras badge */}
             <span
               className="px-1.5 py-0.5 rounded text-white"
-              style={{ fontSize: 10, fontWeight: 700, backgroundColor: "rgba(255,255,255,0.2)" }}
+              style={{ fontSize: 12, fontWeight: 700, backgroundColor: "rgba(255,255,255,0.2)" }}
             >
               VLibras
             </span>
@@ -206,7 +212,7 @@ export function VLibrasPanel({ onClose }: VLibrasPanelProps) {
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#22c55e" }} aria-hidden="true" />
             <span className="text-xs" style={{ color: "#4a4a6a" }}>Libras ativo</span>
           </div>
-          <span className="text-xs" style={{ color: "#9ca3af" }}>Powered by VLibras</span>
+          <span className="text-xs" style={{ color: "#5b5b7a" }}>Powered by VLibras</span>
         </div>
       </div>
 

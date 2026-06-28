@@ -166,7 +166,7 @@ export function MobileSearchPage({ onBack }: MobileSearchPageProps) {
                 aria-label="Limpar"
                 className="absolute right-2 top-1/2 -translate-y-1/2 focus:outline-none"
               >
-                <X size={15} color="#9ca3af" />
+                <X size={15} color="#5b5b7a" />
               </button>
             )}
           </div>
@@ -233,7 +233,7 @@ export function MobileSearchPage({ onBack }: MobileSearchPageProps) {
                   onClick={() => setQuery(s.label)}
                   aria-label={`Buscar por ${s.label}`}
                 >
-                  <Search size={15} color="#9ca3af" aria-hidden="true" />
+                  <Search size={15} color="#5b5b7a" aria-hidden="true" />
                   <span className="flex-1 text-sm" style={{ color: "#4a4a6a" }}>{s.label}</span>
                   <div className="flex gap-1">
                     {s.badges.map((b) => (

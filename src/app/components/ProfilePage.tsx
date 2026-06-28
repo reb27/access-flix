@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ChevronLeft, Star, Edit2, Sun, Type, Hand, Moon, LogIn, LogOut, BookOpen } from "lucide-react";
+import { ChevronLeft, Star, Edit2, LogIn, LogOut, BookOpen } from "lucide-react";
+import { ALL_CONTENT } from "./ContentCard";
 
 /* ── Badge colors ── */
 const badgeColors: Record<string, { bg: string; text: string }> = {
@@ -26,96 +27,56 @@ const NEED_LABELS: Record<string, { label: string; color: string; bg: string }> 
   eye_tracking:   { label: "Eye tracking",  color: "#f5a623", bg: "#fff4e0" },
 };
 
-/* ── Saved items ── */
-const SAVED_ITEMS = [
-  { id: 1, title: "The Last of Us",   rating: 4.7, badges: ["Leg","Libras"], posterColor: "#14b8a6" },
-  { id: 2, title: "Hi-Fi Rush",       rating: 4.9, badges: ["AD","Leg"],     posterColor: "#6366f1" },
-  { id: 3, title: "Wicked",           rating: 4.8, badges: ["AD","Leg","Libras"], posterColor: "#ec4899" },
-];
+/* Saved/history pull real items from the catalog so posters render. */
+const SAVED_ITEMS = ALL_CONTENT.filter((c) => [3, 23, 22].includes(c.id));   // TLOU, Hi-Fi Rush, Wicked
+const HISTORY = ALL_CONTENT.filter((c) => [4, 2, 16].includes(c.id))         // Oppenheimer, Duna 2, Inside Out 2
+  .map((c, i) => ({ ...c, platform: ["Prime Video", "Netflix", "Disney+"][i] }));
 
-const HISTORY = [
-  { id: 1, title: "Oppenheimer",        platform: "Prime Video", posterColor: "#8b5cf6" },
-  { id: 2, title: "Duna: Parte Dois",   platform: "Netflix",     posterColor: "#f59e0b" },
-  { id: 3, title: "Inside Out 2",       platform: "Disney+",     posterColor: "#ec4899" },
-];
-
-/* ── Resource toggle ── */
-function ResourceToggle({
-  label, icon, on, onChange,
-}: { label: string; icon: React.ReactNode; on: boolean; onChange: () => void }) {
-  return (
-    <div
-      className="flex items-center justify-between rounded-xl px-4"
-      style={{
-        minHeight: 52,
-        backgroundColor: on ? "#f0f4ff" : "#fafafa",
-        border: `1.5px solid ${on ? "#0073e6" : "#e2e8f0"}`,
-        transition: "all 0.15s ease",
-      }}
-    >
-      <div className="flex items-center gap-3">
-        <span style={{ color: on ? "#0073e6" : "#9ca3af" }} aria-hidden="true">{icon}</span>
-        <span className="text-sm font-medium" style={{ color: on ? "#1a1a2e" : "#4a4a6a" }}>{label}</span>
-      </div>
-      <button
-        role="switch"
-        aria-checked={on}
-        aria-label={label}
-        onClick={onChange}
-        className="relative flex-shrink-0 rounded-full focus:outline-none"
-        style={{
-          width: 48, height: 26,
-          backgroundColor: on ? "#0073e6" : "#d0d5e0",
-          transition: "background-color 0.2s ease",
-          border: "none",
-          cursor: "pointer",
-        }}
-        onFocus={(e) => { e.currentTarget.style.outline = "3px solid #0073e6"; e.currentTarget.style.outlineOffset = "2px"; }}
-        onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
-      >
-        <span
-          className="absolute top-[2px] rounded-full bg-white shadow-sm"
-          style={{ width: 22, height: 22, left: on ? 24 : 2, transition: "left 0.2s ease" }}
-          aria-hidden="true"
-        />
-      </button>
-    </div>
-  );
-}
-
-/* ── Saved poster card ── */
-function SavedCard({ item }: { item: typeof SAVED_ITEMS[0] }) {
+/* ── Saved poster card — uses real ContentItem with poster ── */
+function SavedCard({ item, onClick }: { item: typeof SAVED_ITEMS[0]; onClick?: () => void }) {
   const [failed, setFailed] = useState(false);
   return (
-    <div className="flex-shrink-0 flex flex-col" style={{ width: 100 }}>
+    <button
+      type="button"
+      onClick={onClick}
+      className="af-focus flex-shrink-0 flex flex-col text-left rounded-xl"
+      style={{ width: 110 }}
+    >
       <div
-        className="rounded-xl overflow-hidden flex-shrink-0"
-        style={{ width: 100, height: 140, backgroundColor: item.posterColor }}
-        aria-hidden="true"
+        className="rounded-xl overflow-hidden flex-shrink-0 relative"
+        style={{ width: 110, height: 165, backgroundColor: item.posterColor }}
       >
         {!failed ? (
+          <img
+            src={item.poster}
+            alt={`Pôster de ${item.title}`}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={() => setFailed(true)}
+            loading="lazy"
+          />
+        ) : (
           <div className="w-full h-full flex items-center justify-center" aria-hidden="true">
             <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
-              <path d="M6 34L16 20L22 28L28 16L36 34H6Z" fill="white" fillOpacity="0.22" />
-              <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.22" />
+              <path d="M6 34L16 20L22 28L28 16L36 34H6Z" fill="white" fillOpacity="0.4" />
+              <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.4" />
             </svg>
           </div>
-        ) : null}
+        )}
       </div>
       <p className="text-xs font-semibold mt-1.5 leading-tight line-clamp-2" style={{ color: "#1a1a2e" }}>{item.title}</p>
       <div className="flex items-center gap-1 mt-0.5">
-        <Star size={10} fill="#f5a623" color="#f5a623" aria-hidden="true" />
-        <span className="text-xs font-bold" style={{ color: "#4a4a6a" }}>{item.rating}</span>
+        <Star size={10} fill="#b35d00" color="#b35d00" aria-hidden="true" />
+        <span className="text-xs font-bold" style={{ color: "#1a1a2e" }}>{item.rating.toFixed(1)}</span>
       </div>
       <div className="flex flex-wrap gap-0.5 mt-1">
         {item.badges.slice(0, 2).map((b) => (
           <span key={b} className="font-bold px-1 py-0.5 rounded"
-            style={{ backgroundColor: badgeColors[b]?.bg ?? "#f0f0f0", color: badgeColors[b]?.text ?? "#333", fontSize: 9 }}>
+            style={{ backgroundColor: badgeColors[b]?.bg ?? "#f0f0f0", color: badgeColors[b]?.text ?? "#333", fontSize: 12 }}>
             {b}
           </span>
         ))}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -134,16 +95,6 @@ export function ProfilePage({
   userName,
   selectedNeeds = [],
 }: ProfilePageProps) {
-  const [resources, setResources] = useState({
-    contrast:   false,
-    fontLarge:  false,
-    vlibras:    false,
-    darkMode:   false,
-  });
-
-  const toggle = (key: keyof typeof resources) =>
-    setResources((p) => ({ ...p, [key]: !p[key] }));
-
   const displayName = userName || "Visitante";
   const initials = displayName.slice(0, 2).toUpperCase();
 
@@ -224,16 +175,9 @@ export function ProfilePage({
               </button>
             </div>
 
-            {/* ── Recursos ativos — toggles ── */}
-            <section aria-label="Recursos de acessibilidade ativos">
-              <h2 className="font-bold mb-3" style={{ fontSize: 15, color: "#2d2d44" }}>Recursos ativos</h2>
-              <div className="flex flex-col gap-2">
-                <ResourceToggle label="Alto Contraste" icon={<Sun size={18} />} on={resources.contrast} onChange={() => toggle("contrast")} />
-                <ResourceToggle label="Fonte grande"   icon={<Type size={18} />}  on={resources.fontLarge} onChange={() => toggle("fontLarge")} />
-                <ResourceToggle label="VLibras"        icon={<Hand size={18} />}  on={resources.vlibras}  onChange={() => toggle("vlibras")} />
-                <ResourceToggle label="Modo escuro"    icon={<Moon size={18} />}  on={resources.darkMode} onChange={() => toggle("darkMode")} />
-              </div>
-            </section>
+            <p className="text-xs" style={{ color: "#4a4a6a", lineHeight: 1.5 }}>
+              💡 Pra ajustar contraste, fonte e Libras, use os botões no topo da página.
+            </p>
           </div>
 
           {/* ── RIGHT COLUMN (stacks below on mobile) ── */}
@@ -312,20 +256,23 @@ export function ProfilePage({
             <section aria-label="Histórico de visualização">
               <h2 className="font-bold mb-3" style={{ fontSize: 15, color: "#2d2d44" }}>Histórico</h2>
               <div className="flex flex-col gap-2">
-                {HISTORY.map((item) => (
-                  <div key={item.id} className="bg-white rounded-xl px-4 py-3 flex items-center gap-3" style={{ border: "1px solid #e8ecf0" }}>
+                {HISTORY.map((h) => (
+                  <div key={h.id} className="bg-white rounded-xl px-3 py-2.5 flex items-center gap-3" style={{ border: "1px solid #e8ecf0" }}>
                     <div
-                      className="rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ width: 40, height: 40, backgroundColor: item.posterColor }}
-                      aria-hidden="true"
+                      className="rounded-lg overflow-hidden flex-shrink-0"
+                      style={{ width: 44, height: 64, backgroundColor: h.posterColor }}
                     >
-                      <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
-                        <path d="M6 34L16 20L22 28L28 16L36 34H6Z" fill="white" fillOpacity="0.3" />
-                      </svg>
+                      <img
+                        src={h.poster}
+                        alt={`Pôster de ${h.title}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        loading="lazy"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: "#1a1a2e" }}>{item.title}</p>
-                      <p className="text-xs" style={{ color: "#4a4a6a" }}>Assistido em {item.platform}</p>
+                      <p className="text-sm font-semibold truncate" style={{ color: "#1a1a2e" }}>{h.title}</p>
+                      <p className="text-xs" style={{ color: "#4a4a6a" }}>Assistido em {h.platform}</p>
                     </div>
                   </div>
                 ))}
