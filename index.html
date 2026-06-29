@@ -26,5 +26,29 @@
       <div id="root"></div>
       <script type="module" src="/src/main.tsx"></script>
 
+      <!-- VLibras — official Brazilian government sign-language translator.
+           The .enabled class is REQUIRED so the widget bootstraps; we keep it here
+           and hide the widget visually via CSS until the user toggles Libras. -->
+      <div vw="true" class="enabled" id="af-vlibras-root">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+          <div class="vw-plugin-top-wrapper"></div>
+        </div>
+      </div>
+      <script src="https://vlibras.gov.br/app/vlibras-plugin.js" defer></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          var tryInit = function () {
+            if (window.VLibras && typeof window.VLibras.Widget === 'function') {
+              try { new window.VLibras.Widget('https://vlibras.gov.br/app'); }
+              catch (e) { console.warn('[VLibras] init failed:', e); }
+            } else {
+              setTimeout(tryInit, 200);
+            }
+          };
+          tryInit();
+        });
+      </script>
+
     </body>
   </html>

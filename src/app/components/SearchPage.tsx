@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Clock, Star, SlidersHorizontal, X, Check, Eye, Ear, Brain, Hand } from "lucide-react";
+import { ALL_CONTENT, ContentCard, type ContentItem } from "./ContentCard";
 
 /* ── Badge config ── */
 const badgeColors: Record<string, { bg: string; text: string }> = {
@@ -17,17 +18,17 @@ const suggestions = [
   { id: 4, type: "recent" as const, label: "avatar anime dublado",          badges: [] },
 ];
 
-/* ── Results ── */
-const ALL_RESULTS = [
-  { id: 1, title: "Avatar: O Último Mestre do Ar", rating: 4.9, badges: ["AD","Leg","Libras"], posterColor: "#0891b2", type: "Séries" as const, category: "auditiva" },
-  { id: 2, title: "Avatar 2: O Caminho da Água",   rating: 4.7, badges: ["AD","Leg"],          posterColor: "#3b82f6", type: "Filmes" as const, category: "visual"   },
-  { id: 3, title: "Avatar (série)",                 rating: 4.5, badges: ["Leg"],               posterColor: "#6366f1", type: "Séries" as const, category: "auditiva" },
-  { id: 4, title: "Avatar: Legends",               rating: 4.2, badges: ["Leg","Libras"],      posterColor: "#8b5cf6", type: "Séries" as const, category: "auditiva" },
-  { id: 5, title: "Avatar (1999)",                 rating: 4.0, badges: ["Leg"],               posterColor: "#14b8a6", type: "Filmes" as const, category: "auditiva" },
-  { id: 6, title: "Avatar: Frontiers of Pandora",  rating: 4.3, badges: ["Adapt","Leg"],       posterColor: "#10b981", type: "Jogos" as const,  category: "motora"   },
-  { id: 7, title: "Duna: Parte Dois",              rating: 4.9, badges: ["AD","Leg"],          posterColor: "#f59e0b", type: "Filmes" as const, category: "visual"   },
-  { id: 8, title: "The Last of Us",                rating: 4.7, badges: ["Leg","Libras"],      posterColor: "#ef4444", type: "Séries" as const, category: "cognitiva"},
-];
+/* Map ALL_CONTENT items to a "category" so the active chip filter works.
+   An item belongs to whichever accessibility category its badges cover. */
+function inferCategory(c: ContentItem): string {
+  if (c.badges.includes("Libras")) return "auditiva";
+  if (c.badges.includes("Leg"))    return "auditiva";
+  if (c.badges.includes("AD"))     return "visual";
+  if (c.badges.includes("Adapt"))  return "cognitiva";
+  return "visual";
+}
+
+const ALL_RESULTS = ALL_CONTENT.map((c) => ({ ...c, category: inferCategory(c) }));
 
 const PLATFORMS = ["Netflix", "Prime Video", "Disney+", "Globoplay", "Crunchyroll"];
 const CONTENT_TYPES = ["Todos", "Filmes", "Séries", "Jogos"] as const;
@@ -50,35 +51,7 @@ function SkeletonCard() {
   );
 }
 
-/* ── Result card ── */
-function ResultCard({ item }: { item: typeof ALL_RESULTS[0] }) {
-  return (
-    <article className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
-      <div className="w-full aspect-[2/3] flex items-center justify-center relative" style={{ backgroundColor: item.posterColor }} aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-          <path d="M6 34L16 20L22 28L28 16L36 34H6Z" fill="white" fillOpacity="0.22" />
-          <circle cx="14" cy="13" r="5" fill="white" fillOpacity="0.22" />
-        </svg>
-        <div className="absolute bottom-2 left-2 rounded-full px-2 py-0.5 text-xs font-semibold" style={{ backgroundColor: "rgba(0,0,0,0.55)", color: "white" }}>{item.type}</div>
-      </div>
-      <div className="p-3">
-        <h3 className="text-xs font-semibold mb-1.5 leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors" style={{ color: "#1a1a2e" }}>{item.title}</h3>
-        <div className="flex items-center gap-1 mb-2">
-          <Star size={11} fill="#f5a623" color="#f5a623" aria-hidden="true" />
-          <span className="text-xs font-bold" style={{ color: "#1a1a2e" }}>{item.rating}</span>
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {item.badges.map((b) => (
-            <span key={b} className="text-xs font-bold px-1.5 py-0.5 rounded-full"
-              style={{ backgroundColor: badgeColors[b]?.bg ?? "#f0f0f0", color: badgeColors[b]?.text ?? "#333" }}>
-              {b}
-            </span>
-          ))}
-        </div>
-      </div>
-    </article>
-  );
-}
+/* ResultCard removed — we use ContentCard for real navigation + posters */
 
 /* ── Advanced filters drawer ── */
 function AdvancedFiltersDrawer({ isOpen, onClose, activeFilters, onChange }: {
@@ -219,9 +192,10 @@ interface SearchPageProps {
   query: string;
   activeChip: string | null;
   onSuggestionClick: (label: string) => void;
+  onItemClick?: (item: ContentItem) => void;
 }
 
-export function SearchPage({ query, activeChip, onSuggestionClick }: SearchPageProps) {
+export function SearchPage({ query, activeChip, onSuggestionClick, onItemClick }: SearchPageProps) {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState(emptyFilters);
   const [loading, setLoading] = useState(false);
@@ -343,7 +317,9 @@ export function SearchPage({ query, activeChip, onSuggestionClick }: SearchPageP
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredResults.map((r) => <ResultCard key={r.id} item={r} />)}
+                {filteredResults.map((r) => (
+                  <ContentCard key={r.id} item={r} onClick={() => onItemClick?.(r)} />
+                ))}
               </div>
             )}
           </section>

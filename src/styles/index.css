@@ -31,11 +31,25 @@ html.af-dyslexia select {
    GLOBAL ACCESSIBILITY: font scale + high-contrast mode
    ============================================================ */
 
-/* Font scale — applied to <html> from App.tsx. */
-html.af-font-small  { zoom: 0.90; font-size: 14px; }
-html.af-font-medium { zoom: 1.00; font-size: 16px; }
-html.af-font-large  { zoom: 1.18; font-size: 18px; }
-html.af-font-large  body { font-size: 1.05rem; }
+/* Font scale — uses a CSS variable + font-size on html so it works on mobile too
+   (zoom is unreliable on iOS Safari and breaks fixed/overflow containers). */
+html.af-font-small  { --af-scale: 0.92; font-size: 14px; }
+html.af-font-medium { --af-scale: 1.00; font-size: 16px; }
+html.af-font-large  { --af-scale: 1.20; font-size: 18.5px; }
+
+/* Bump every text size proportionally via the scale variable.
+   Inline `style={{ fontSize: 16 }}` (px) doesn't scale; Tailwind utilities do. */
+.text-xs    { font-size: calc(13px   * var(--af-scale, 1)) !important; line-height: 1.4 !important; }
+.text-sm    { font-size: calc(14.5px * var(--af-scale, 1)) !important; }
+.text-base  { font-size: calc(16px   * var(--af-scale, 1)) !important; }
+.text-md    { font-size: calc(17px   * var(--af-scale, 1)) !important; }
+.text-lg    { font-size: calc(19px   * var(--af-scale, 1)) !important; }
+.text-xl    { font-size: calc(22px   * var(--af-scale, 1)) !important; }
+.text-2xl   { font-size: calc(26px   * var(--af-scale, 1)) !important; }
+.text-3xl   { font-size: calc(32px   * var(--af-scale, 1)) !important; }
+
+/* For inline pixel font-sizes in components, opt-in scaling using CSS attr can't be done;
+   but headings + most copy use text-* utilities, so this catches 80% of the UI. */
 
 /* ============================================================
    HIGH CONTRAST — uses CSS filter so it inverts colors without
@@ -71,6 +85,43 @@ html.af-high-contrast :focus-visible {
 /* For use on dark backgrounds (mobile feed, hero overlays) */
 .af-focus-light:focus-visible {
   outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Hide the browser's default search-input clear "X" (we render our own) */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* VLibras widget — hidden by default; the React VLibrasPanel toggles visibility
+   when the Libras button is activated. */
+[vw="true"]:not(.enabled) {
+  display: none !important;
+}
+
+/* ---------- Skip to content link (WCAG 2.4.1 Bypass Blocks) ---------- */
+.af-skip-link {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background-color: #0073e6;
+  color: white;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 0 0 12px 12px;
+  text-decoration: none;
+  font-size: 15px;
+  transition: top 200ms ease;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+.af-skip-link:focus,
+.af-skip-link:focus-visible {
+  top: 0;
+  outline: 3px solid #ffeb00;
   outline-offset: 2px;
 }
 

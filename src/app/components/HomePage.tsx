@@ -302,7 +302,7 @@ export function HomePage({ onNavigate, disabilityProfile, hasProfile, selectedNe
       {/* Hero */}
       <section aria-labelledby="hero-title" className="mb-8 md:mb-12">
         <div
-          className="af-hero relative rounded-3xl p-6 md:p-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 overflow-hidden"
+          className="af-hero relative rounded-3xl p-5 md:p-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 overflow-hidden"
           style={{
             background:
               "radial-gradient(circle at 80% 20%, rgba(255,255,255,0.18), transparent 50%), " +
@@ -323,8 +323,8 @@ export function HomePage({ onNavigate, disabilityProfile, hasProfile, selectedNe
             </div>
             <h1
               id="hero-title"
-              className="font-black mb-3"
-              style={{ fontSize: "clamp(28px, 4.5vw, 44px)", lineHeight: 1.05, letterSpacing: "-0.02em" }}
+              className="font-black mb-3 break-words"
+              style={{ fontSize: "clamp(22px, 5.5vw, 44px)", lineHeight: 1.1, letterSpacing: "-0.02em" }}
             >
               {hasProfile
                 ? "Oi! Selecionamos uns títulos pra você."

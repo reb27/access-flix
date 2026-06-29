@@ -176,13 +176,14 @@ export default function App() {
         className="flex flex-col af-app-root"
         style={{ height: "100svh", overflow: "hidden", backgroundColor: "var(--af-bg, #F5F7FA)", letterSpacing: letterSpacingMap[fontSpacing] }}
       >
+        <a href="#main-content" className="af-skip-link">Pular para o conteúdo principal</a>
         {/* Header shown on all pages except categories (which has its own header) */}
         {page !== "mobilecategories" && (
           <MobileHeader onNavigate={setPage} />
         )}
 
         {/* Content area — min-h-0 is required so flex-1 actually respects the parent's height and doesn't push the bottom nav off-screen */}
-        <div ref={mobileScrollRef} className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+        <div id="main-content" ref={mobileScrollRef} className="flex-1 overflow-y-auto" style={{ minHeight: 0 }} tabIndex={-1}>
           {page === "home" && (
             <HomePage
               onNavigate={setPage as any}
@@ -268,6 +269,11 @@ export default function App() {
       className="flex flex-col af-app-root"
       style={{ minHeight: "100vh", letterSpacing: letterSpacingMap[fontSpacing] }}
     >
+      {/* Skip link — first focusable element, jumps past the navbar */}
+      <a href="#main-content" className="af-skip-link">
+        Pular para o conteúdo principal
+      </a>
+
       <NavBar
         onNavigate={setPage as any}
         currentPage={page}
@@ -296,6 +302,7 @@ export default function App() {
           query={searchQuery}
           activeChip={activeSearchChip}
           onSuggestionClick={(label) => setSearchQuery(label)}
+          onItemClick={(item) => { handleDeactivateSearch(); openDetail(item); }}
         />
       ) : (
         <>
@@ -320,7 +327,7 @@ export default function App() {
               selectedNeeds={selectedNeeds}
             />
           )}
-          {page === "search" && <SearchPage query={searchQuery} activeChip={activeSearchChip} onSuggestionClick={(label) => setSearchQuery(label)} />}
+          {page === "search" && <SearchPage query={searchQuery} activeChip={activeSearchChip} onSuggestionClick={(label) => setSearchQuery(label)} onItemClick={openDetail} />}
         </>
       )}
 

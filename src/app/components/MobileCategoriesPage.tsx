@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Search, Star } from "lucide-react";
 import { ALL_CONTENT, type ContentItem } from "./ContentCard";
 
-type Page = "home" | "listing" | "detail" | "watch" | "profile" | "search" | "highcontrast" | "createprofile" | "mobilecategories" | "mobilesearch";
+type Page = "home" | "listing" | "detail" | "watch" | "profile" | "search" | "highcontrast" | "createprofile" | "mobilecategories" | "mobilesearch" | "category-visual" | "category-auditiva" | "category-cognitiva" | "category-motora";
 
 const categories = [
   {
@@ -130,14 +130,14 @@ export function MobileCategoriesPage({ onNavigate, onItemClick }: MobileCategori
         {/* 2×3 grid */}
         <section aria-label="Categorias de acessibilidade" className="mb-6">
           <div className="grid grid-cols-2 gap-3">
-            {categories.map((cat) => (
+            {categories.filter((cat) => ["visual","auditiva","cognitiva","motora"].includes(cat.id)).map((cat) => (
               <button
                 key={cat.id}
-                className="flex flex-col items-center justify-center gap-2 rounded-2xl transition-all focus:outline-none active:scale-[0.97]"
-                style={{ height: 100, backgroundColor: cat.bg, border: `1.5px solid ${cat.accentColor}28` }}
-                aria-label={`${cat.label} — ${cat.description}`}
-                onFocus={(e) => { e.currentTarget.style.outline = `3px solid ${cat.accentColor}`; e.currentTarget.style.outlineOffset = "2px"; }}
-                onBlur={(e) => { e.currentTarget.style.outline = "none"; }}
+                type="button"
+                onClick={() => onNavigate(`category-${cat.id}` as Page)}
+                className="af-focus flex flex-col items-center justify-center gap-2 rounded-2xl transition-all active:scale-[0.97]"
+                style={{ height: 120, backgroundColor: cat.bg, border: `1.5px solid ${cat.accentColor}28`, padding: 12 }}
+                aria-label={`Abrir página de acessibilidade ${cat.label}: ${cat.description}`}
               >
                 <div style={{ color: cat.accentColor }}>{cat.icon}</div>
                 <div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Eye, Ear, Brain, Star, ChevronLeft,
   Volume2, Captions, Hand, Monitor, Keyboard, Mic, Zap, BookOpen,
-  Bookmark, ThumbsUp, Share2, Send, CheckSquare, Square, Calendar, Clock, Film, Play,
+  Bookmark, ThumbsUp, Send, CheckSquare, Square, Calendar, Clock, Film, Play,
 } from "lucide-react";
 import { StreamingModal } from "./StreamingModal";
 import { ContentCard, ALL_CONTENT, platformConfig, type PlatformId } from "./ContentCard";
@@ -162,14 +162,6 @@ function ReviewCard({ review }: { review: ReviewItem }) {
         >
           <ThumbsUp size={14} aria-hidden="true" />
           Útil ({helpful})
-        </button>
-        <button
-          className="flex items-center gap-1.5 text-xs transition-colors focus:outline-none focus:ring-2 rounded px-1"
-          style={{ color: "#4a4a6a", ["--tw-ring-color" as string]: "#0073e6" }}
-          aria-label="Compartilhar avaliação"
-        >
-          <Share2 size={14} aria-hidden="true" />
-          Compartilhar
         </button>
       </div>
     </article>
